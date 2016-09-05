@@ -1,8 +1,3 @@
-//GLOBALS
-//Canvas
-var gameCanvas = document.getElementById('game');
-var gameCtx = gameCanvas.getContext("2d");
-
 //SPRITES
 var tilesImage = new Image();
 //tilesImage.src = "img/tiles.png";
@@ -30,9 +25,6 @@ var mapArray = [
     [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3]
 
 ];
-
-gameCanvas.width = 640; //mapArray[0].length*tileSize;
-gameCanvas.height = 640; //mapArray.length*tileSize;
 
 var screenOffset = {
     x: 0,
@@ -70,6 +62,13 @@ var player = {
 game = function(){
   that = this;
   this.state = "menu"; //menu, play, lose, win
+  //Canvas
+  this.gameCanvas = document.getElementById('game');
+  this.gameCtx = this.gameCanvas.getContext("2d");
+
+  this.gameCanvas.width = 640;
+  this.gameCanvas.height = 640;
+
   this.handleKeyPressed = function(e) {
     if (that.state == "play") {
       switch (String.fromCharCode(e.keyCode))
@@ -106,14 +105,14 @@ game = function(){
   },
 
   this.draw = function() {
-    gameCanvas.width = gameCanvas.width; //clear the canvas
+    this.gameCanvas.width = this.gameCanvas.width; //clear the canvas
     if (this.state == "menu") {
-      gameCtx.fillStyle = "black";
-      gameCtx.fillRect(0,0, gameCanvas.width, gameCanvas.height);
+      this.gameCtx.fillStyle = "black";
+      this.gameCtx.fillRect(0,0, this.gameCanvas.width, this.gameCanvas.height);
 
-      gameCtx.fillStyle = "white";
-      gameCtx.font = "20px Courier New";
-      gameCtx.fillText("Hit Enter To Start", 240, 240);
+      this.gameCtx.fillStyle = "white";
+      this.gameCtx.font = "20px Courier New";
+      this.gameCtx.fillText("Hit Enter To Start", 240, 240);
     }
 
     if (this.state == "play") {
@@ -121,16 +120,16 @@ game = function(){
         for (var x = 0; x<mapArray[y].length; x++){
           var tile = mapArray[y][x];
           switch (tile) {
-            case 0: gameCtx.fillStyle = "black";break;
-            case 1: gameCtx.fillStyle = "red";break;
-            case 3: gameCtx.fillStyle = "blue";break;
+            case 0: this.gameCtx.fillStyle = "black";break;
+            case 1: this.gameCtx.fillStyle = "red";break;
+            case 3: this.gameCtx.fillStyle = "blue";break;
 
           }
-          gameCtx.fillRect(x * tileSize + screenOffset.x, y * tileSize + screenOffset.y, tileSize, tileSize);
+          this.gameCtx.fillRect(x * tileSize + screenOffset.x, y * tileSize + screenOffset.y, tileSize, tileSize);
         }
       }
-      gameCtx.fillStyle = "purple"
-      gameCtx.fillRect(player.x * tileSize + screenOffset.x, player.y * tileSize + screenOffset.y, tileSize, tileSize);
+      this.gameCtx.fillStyle = "purple"
+      this.gameCtx.fillRect(player.x * tileSize + screenOffset.x, player.y * tileSize + screenOffset.y, tileSize, tileSize);
     }
   }
 
