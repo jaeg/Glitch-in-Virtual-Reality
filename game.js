@@ -1,3 +1,137 @@
+//GLOBALS
+//Canvas
+var gameCanvas = document.getElementById('game');
+var gameCtx = gameCanvas.getContext("2d");
+
+//SPRITES
+var tilesImage = new Image();
+//tilesImage.src = "img/tiles.png";
+var spriteTileSize = 16
+
+//MAPS
+var tileSize = 32;
+var mapArray = [
+    [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+    [3, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
+    [3, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
+    [3, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
+    [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
+    [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
+    [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
+    [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
+    [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
+    [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
+    [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
+    [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
+    [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
+    [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
+    [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
+    [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
+    [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3]
+
+];
+
+gameCanvas.width = 640; //mapArray[0].length*tileSize;
+gameCanvas.height = 640; //mapArray.length*tileSize;
+
+var screenOffset = {
+    x: 0,
+    y: 0
+};
+
+//Player location is going to be maintained in map array index notation to prevent conversions
+var player = {
+  x: 1,
+  y: 1,
+  inventory: [],
+  move: function(dirX, dirY, avoidCollisions){
+    if (avoidCollisions) {
+      this.x += dirX;
+      this.y += dirY;
+      return;
+    }
+
+    var newPosX = this.x + dirX;
+    var newPosY = this.y + dirY;
+
+    if (mapArray[newPosY] != undefined) {
+      if (mapArray[newPosY][newPosX] != undefined){
+        if (mapArray[newPosY][newPosX] != 3) {
+          this.x = newPosX;
+          this.y = newPosY;
+        }
+      }
+    }
+  }
+}
+
+document.addEventListener("keydown", handleKeyPressed, false);
+
+function handleKeyPressed(e) {
+  switch (String.fromCharCode(e.keyCode))
+  {
+      case 'W':
+          player.move(0,-1);
+          break;
+      case 'A':
+          player.move(-1,0);
+          break;
+      case 'S':
+          player.move(0,1);
+          break;
+      case 'D':
+          player.move(1,0);
+          break;
+  }
+}
+
+function update() {
+
+}
+
+function draw() {
+  gameCanvas.width = gameCanvas.width; //clear the canvas
+  for (var y = 0; y<mapArray.length; y++) {
+    for (var x = 0; x<mapArray[y].length; x++){
+      var tile = mapArray[y][x];
+      switch (tile) {
+        case 0: gameCtx.fillStyle = "black";break;
+        case 1: gameCtx.fillStyle = "red";break;
+        case 3: gameCtx.fillStyle = "blue";break;
+
+      }
+      gameCtx.fillRect(x * tileSize + screenOffset.x, y * tileSize + screenOffset.y, tileSize, tileSize);
+    }
+  }
+  gameCtx.fillStyle = "purple"
+  gameCtx.fillRect(player.x * tileSize + screenOffset.x, player.y * tileSize + screenOffset.y, tileSize, tileSize);
+}
+
+
+//Main Loop
+var mainloop = function() {
+    update();
+    draw();
+};
+
+var animFrame = window.requestAnimationFrame ||
+    window.webkitRequestAnimationFrame ||
+    window.mozRequestAnimationFrame ||
+    window.oRequestAnimationFrame ||
+    window.msRequestAnimationFrame ||
+    null;
+
+var recursiveAnim = function() {
+    mainloop();
+    animFrame(recursiveAnim);
+};
+
+// start the mainloop
+animFrame(recursiveAnim);
+
+
+
+//Utility Functions
 function addMessage(from, message){
   var messageLog = document.getElementById("messageLog");
   var currentMessageLogText = messageLog.innerHTML;
@@ -9,8 +143,3 @@ function addMessage(from, message){
   messageLog.innerHTML = currentMessageLogText;
   console.log(messageLog);
 }
-
-
-addMessage("GM","Test");
-addMessage("GM","Test2");
-addMessage("GM","Test3");
