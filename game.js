@@ -67,10 +67,11 @@ var player = {
   }
 }
 
-game = {
-  state: "menu", //menu, play, lose, win
-  handleKeyPressed: function(e) {
-    if (game.state == "play") {
+game = function(){
+  that = this;
+  this.state = "menu"; //menu, play, lose, win
+  this.handleKeyPressed = function(e) {
+    if (that.state == "play") {
       switch (String.fromCharCode(e.keyCode))
       {
           case 'W':
@@ -87,24 +88,24 @@ game = {
               break;
       }
     }
-    if (game.state != "play") {
-      if (e.keyCode == 13 && game.state != "play")
+    if (that.state != "play") {
+      if (e.keyCode == 13 && that.state != "play")
        {
-           game.start();
+           that.start();
        }
     }
-  },
+  }
 
-  start: function() {
+  this.start = function() {
     //generate map, position player, create enemies, all that fun stuff.
     this.state = "play";
+  }
+
+  this.update = function() {
+
   },
 
-  update: function() {
-
-  },
-
-  draw: function() {
+  this.draw = function() {
     gameCanvas.width = gameCanvas.width; //clear the canvas
     if (this.state == "menu") {
       gameCtx.fillStyle = "black";
@@ -131,18 +132,19 @@ game = {
       gameCtx.fillStyle = "purple"
       gameCtx.fillRect(player.x * tileSize + screenOffset.x, player.y * tileSize + screenOffset.y, tileSize, tileSize);
     }
-  },
+  }
 
-  cleanUp: function() {
+  this.cleanUp = function() {
 
-  },
+  }
 
 }
 
+theGame = new game();
 //Main Loop
 var mainloop = function() {
-    game.update();
-    game.draw();
+    theGame.update();
+    theGame.draw();
 };
 
 var animFrame = window.requestAnimationFrame ||
@@ -159,7 +161,7 @@ var recursiveAnim = function() {
 
 
 // start the mainloop
-document.addEventListener("keydown", game.handleKeyPressed, false);
+document.addEventListener("keydown", theGame.handleKeyPressed, false);
 animFrame(recursiveAnim);
 function addMessage(from, message){
   var messageLog = document.getElementById("messageLog");
