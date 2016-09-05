@@ -34,8 +34,6 @@ var mapArray = [
 gameCanvas.width = 640; //mapArray[0].length*tileSize;
 gameCanvas.height = 640; //mapArray.length*tileSize;
 
-var gameState = "menu"; //menu, play, lose, win
-
 var screenOffset = {
     x: 0,
     y: 0
@@ -69,85 +67,82 @@ var player = {
   }
 }
 
-document.addEventListener("keydown", handleKeyPressed, false);
-
-function handleKeyPressed(e) {
-  if (gameState == "play") {
-    switch (String.fromCharCode(e.keyCode))
-    {
-        case 'W':
-            player.move(0,-1);
-            break;
-        case 'A':
-            player.move(-1,0);
-            break;
-        case 'S':
-            player.move(0,1);
-            break;
-        case 'D':
-            player.move(1,0);
-            break;
-    }
-  }
-
-  if (gameState != "play") {
-    if (e.keyCode == 13 && gameState != "play")
-     {
-         start();
-     }
-  }
-
-}
-
-function start(){
-  //generate map, position player, create enemies, all that fun stuff.
-
-
-  gameState = "play";
-}
-
-function cleanUp() {
-  //kill enemies, empty player inventory, refill what needs refilled, etc
-}
-
-function update() {
-
-}
-
-function draw() {
-  gameCanvas.width = gameCanvas.width; //clear the canvas
-  if (gameState == "menu") {
-    gameCtx.fillStyle = "black";
-    gameCtx.fillRect(0,0, gameCanvas.width, gameCanvas.height);
-
-    gameCtx.fillStyle = "white";
-    gameCtx.font = "20px Courier New";
-    gameCtx.fillText("Hit Enter To Start", 240, 240);
-  }
-
-  if (gameState == "play") {
-    for (var y = 0; y<mapArray.length; y++) {
-      for (var x = 0; x<mapArray[y].length; x++){
-        var tile = mapArray[y][x];
-        switch (tile) {
-          case 0: gameCtx.fillStyle = "black";break;
-          case 1: gameCtx.fillStyle = "red";break;
-          case 3: gameCtx.fillStyle = "blue";break;
-
-        }
-        gameCtx.fillRect(x * tileSize + screenOffset.x, y * tileSize + screenOffset.y, tileSize, tileSize);
+game = {
+  state: "menu", //menu, play, lose, win
+  handleKeyPressed: function(e) {
+    if (game.state == "play") {
+      switch (String.fromCharCode(e.keyCode))
+      {
+          case 'W':
+              player.move(0,-1);
+              break;
+          case 'A':
+              player.move(-1,0);
+              break;
+          case 'S':
+              player.move(0,1);
+              break;
+          case 'D':
+              player.move(1,0);
+              break;
       }
     }
-    gameCtx.fillStyle = "purple"
-    gameCtx.fillRect(player.x * tileSize + screenOffset.x, player.y * tileSize + screenOffset.y, tileSize, tileSize);
-  }
-}
+    if (game.state != "play") {
+      if (e.keyCode == 13 && game.state != "play")
+       {
+           game.start();
+       }
+    }
+  },
 
+  start: function() {
+    //generate map, position player, create enemies, all that fun stuff.
+    this.state = "play";
+  },
+
+  update: function() {
+
+  },
+
+  draw: function() {
+    gameCanvas.width = gameCanvas.width; //clear the canvas
+    if (this.state == "menu") {
+      gameCtx.fillStyle = "black";
+      gameCtx.fillRect(0,0, gameCanvas.width, gameCanvas.height);
+
+      gameCtx.fillStyle = "white";
+      gameCtx.font = "20px Courier New";
+      gameCtx.fillText("Hit Enter To Start", 240, 240);
+    }
+
+    if (this.state == "play") {
+      for (var y = 0; y<mapArray.length; y++) {
+        for (var x = 0; x<mapArray[y].length; x++){
+          var tile = mapArray[y][x];
+          switch (tile) {
+            case 0: gameCtx.fillStyle = "black";break;
+            case 1: gameCtx.fillStyle = "red";break;
+            case 3: gameCtx.fillStyle = "blue";break;
+
+          }
+          gameCtx.fillRect(x * tileSize + screenOffset.x, y * tileSize + screenOffset.y, tileSize, tileSize);
+        }
+      }
+      gameCtx.fillStyle = "purple"
+      gameCtx.fillRect(player.x * tileSize + screenOffset.x, player.y * tileSize + screenOffset.y, tileSize, tileSize);
+    }
+  },
+
+  cleanUp: function() {
+
+  },
+
+}
 
 //Main Loop
 var mainloop = function() {
-    update();
-    draw();
+    game.update();
+    game.draw();
 };
 
 var animFrame = window.requestAnimationFrame ||
@@ -162,12 +157,10 @@ var recursiveAnim = function() {
     animFrame(recursiveAnim);
 };
 
+
 // start the mainloop
+document.addEventListener("keydown", game.handleKeyPressed, false);
 animFrame(recursiveAnim);
-
-
-
-//Utility Functions
 function addMessage(from, message){
   var messageLog = document.getElementById("messageLog");
   var currentMessageLogText = messageLog.innerHTML;
