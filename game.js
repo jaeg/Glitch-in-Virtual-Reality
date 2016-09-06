@@ -35,6 +35,7 @@ var screenOffset = {
 var player = {
     x: 1,
     y: 1,
+    sightRange: 3,
     inventory: [],
     move: function(dirX, dirY, avoidCollisions) {
         if (avoidCollisions) {
@@ -53,15 +54,35 @@ var player = {
                 if (mapArray[newPosY][newPosX] != 3) {
                     this.x = newPosX;
                     this.y = newPosY;
+
+                    theGame.checkTraps(this.x, this.y);
                 }
             }
         }
     }
 }
 
-game = function() {
+function Enemy(x,y, type) {
+  this.x = x;
+  this.y = y;
+  this.type = type;
+}
+
+function Trap(x,y, type) {
+  this.x = x;
+  this.y = y;
+  this.type = type;
+  this.setOff = false;
+  this.spotted = false;
+  this.spotText = "You see a trap nearby!";
+  this.triggerText = "You have set off the trap!";
+}
+
+function Game() {
     that = this;
     this.state = "menu"; //menu, play, lose, win
+    this.traps = [];
+    this.enemies = [];
     //Canvas
     this.gameCanvas = document.getElementById('game');
     this.gameCtx = this.gameCanvas.getContext("2d");
@@ -96,13 +117,15 @@ game = function() {
     this.start = function() {
         //generate map, position player, create enemies, all that fun stuff.
         this.state = "play";
+        this.populateTraps(10);
+        this.populateEnemies(3);
     }
 
     this.update = function() {
 
-        },
+    }
 
-        this.draw = function() {
+    this.draw = function() {
             this.gameCanvas.width = this.gameCanvas.width; //clear the canvas
             if (this.state == "menu") {
                 this.gameCtx.fillStyle = "black";
@@ -132,8 +155,34 @@ game = function() {
                         this.gameCtx.fillRect(x * tileSize + screenOffset.x, y * tileSize + screenOffset.y, tileSize, tileSize);
                     }
                 }
+
+                //draw traps
+                for (var i = 0; i < this.traps.length; i++) {
+                  var trap = this.traps[i];
+                  if (trap.spotted && !trap.setOff) {
+                    this.gameCtx.fillStyle = "teal"
+                    this.gameCtx.fillRect(trap.x * tileSize + screenOffset.x, trap.y * tileSize + screenOffset.y, tileSize, tileSize);
+                  }
+
+                  if (trap.setOff) {
+                    this.gameCtx.fillStyle = "grey"
+                    this.gameCtx.fillRect(trap.x * tileSize + screenOffset.x, trap.y * tileSize + screenOffset.y, tileSize, tileSize);
+
+                  }
+
+                }
+
+                //draw enemies
+                for (var i = 0; i < this.enemies.length; i++) {
+                  var enemy = this.enemies[i];
+                  this.gameCtx.fillStyle = "green"
+                  this.gameCtx.fillRect(enemy.x * tileSize + screenOffset.x, enemy.y * tileSize + screenOffset.y, tileSize, tileSize);
+
+                }
+
                 this.gameCtx.fillStyle = "purple"
                 this.gameCtx.fillRect(player.x * tileSize + screenOffset.x, player.y * tileSize + screenOffset.y, tileSize, tileSize);
+
             }
         }
 
@@ -141,9 +190,51 @@ game = function() {
 
     }
 
+    this.populateTraps = function(count){
+      for(var i = 0; i < count; i++) {
+        var x = 0;
+        var y = 0
+        do {
+          x = Math.floor(Math.random()* mapArray[0].length)
+          y = Math.floor(Math.random()* mapArray.length)
+        } while(mapArray[y][x] != 0)
+        this.traps.push(new Trap(x,y))
+      }
+    }
+
+    this.populateEnemies = function(count){
+      for(var i = 0; i < count; i++) {
+        var x = 0;
+        var y = 0
+        do {
+          x = Math.floor(Math.random()* mapArray[0].length)
+          y = Math.floor(Math.random()* mapArray.length)
+        } while(mapArray[y][x] != 0)
+        this.enemies.push(new Enemy(x,y))
+      }
+    }
+
+    this.checkTraps = function(x,y) {
+      for (var i = 0; i < this.traps.length; i++){
+        var trap = this.traps[i];
+        if (!trap.setOff) {
+          if (trap.x == x && trap.y == y) {
+            trap.setOff = true;
+            addMessage("TRAP", trap.triggerText);
+          }
+
+          if (!trap.spotted) {
+            if (Math.abs(trap.x - x) < 3 && Math.abs(trap.y - y) < 3) {
+              trap.spotted = true;
+              addMessage("TRAP", trap.spotText);
+            }
+          }
+        }
+      }
+    }
 }
 
-theGame = new game();
+theGame = new Game();
 //Main Loop
 var mainloop = function() {
     theGame.update();
@@ -176,5 +267,4 @@ function addMessage(from, message) {
     currentMessageLogText = currentMessageLogText + newMessage;
 
     messageLog.innerHTML = currentMessageLogText;
-    console.log(messageLog);
 }
