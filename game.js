@@ -43,6 +43,17 @@ var player = {
     takeDamage: function(amount) {
       this.hp -= amount - this.armor
     },
+    updateUI: function() {
+      hpSpan = document.getElementById('hp');
+      hpSpan.innerHTML = this.hp;
+      damageSpan = document.getElementById('damage');
+      damageSpan.innerHTML = this.damage;
+      armorSpan = document.getElementById('armor');
+      armorSpan.innerHTML = this.armor;
+      sightRangeSpan = document.getElementById('sightrange');
+      sightRangeSpan.innerHTML = this.sightRange;
+
+    },
     move: function(dirX, dirY, avoidCollisions) {
         if (avoidCollisions) {
             this.x += dirX;
@@ -63,7 +74,7 @@ var player = {
                     this.y = newPosY;
                   }
 
-                  theGame.checkTraps(this.x, this.y,this.sightRange);
+                  theGame.checkTraps(this);
                 }
             }
         }
@@ -90,6 +101,7 @@ function Trap(x,y, type) {
   this.x = x;
   this.y = y;
   this.type = type;
+  this.damage = 5;
   this.setOff = false;
   this.spotted = false;
   this.spotText = "You see a trap nearby!";
@@ -140,7 +152,7 @@ function Game() {
     }
 
     this.update = function() {
-
+      player.updateUI();
     }
 
     this.draw = function() {
@@ -289,17 +301,18 @@ function Game() {
       }
     }
 
-    this.checkTraps = function(x,y,sightRange) {
+    this.checkTraps = function(player) {
       for (var i = 0; i < this.traps.length; i++){
         var trap = this.traps[i];
         if (!trap.setOff) {
-          if (trap.x == x && trap.y == y) {
+          if (trap.x == player.x && trap.y == player.y) {
             trap.setOff = true;
             addMessage("TRAP", trap.triggerText);
+            player.takeDamage(trap.damage);
           }
 
           if (!trap.spotted) {
-            if (Math.abs(trap.x - x) < sightRange && Math.abs(trap.y - y) < sightRange) {
+            if (Math.abs(trap.x - player.x) < player.sightRange && Math.abs(trap.y - player.y) < player.sightRange) {
               trap.spotted = true;
               addMessage("TRAP", trap.spotText);
             }
