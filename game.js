@@ -35,8 +35,14 @@ var screenOffset = {
 var player = {
     x: 1,
     y: 1,
+    hp: 50,
+    armor: 0,
+    damage: 2,
     sightRange: 3,
     inventory: [],
+    takeDamage: function(amount) {
+      this.hp -= amount - this.armor
+    },
     move: function(dirX, dirY, avoidCollisions) {
         if (avoidCollisions) {
             this.x += dirX;
@@ -52,7 +58,7 @@ var player = {
         if (mapArray[newPosY] != undefined) {
             if (mapArray[newPosY][newPosX] != undefined) {
                 if (mapArray[newPosY][newPosX] != 3) {
-                  if (!theGame.checkForEnemyAt(newPosX,newPosY, true)) {
+                  if (!theGame.checkForEnemyAt(newPosX,newPosY, true, this.damage)) {
                     this.x = newPosX;
                     this.y = newPosY;
                   }
@@ -62,13 +68,16 @@ var player = {
             }
         }
 
-        theGame.updateEnemies(this.x, this.y);
+        theGame.updateEnemies(player);
     }
 }
 
 function Enemy(x,y, type) {
   this.x = x;
   this.y = y;
+  this.hp = 10;
+  this.damage = 1;
+  this.dead = false;
   this.type = type || "RAT";
   this.sightRange = 5;
   this.chasing = false;
@@ -184,7 +193,11 @@ function Game() {
                 //draw enemies
                 for (var i = 0; i < this.enemies.length; i++) {
                   var enemy = this.enemies[i];
-                  this.gameCtx.fillStyle = "green"
+                  if (enemy.dead == false) {
+                    this.gameCtx.fillStyle = "green";
+                  } else {
+                    this.gameCtx.fillStyle = "darkgreen";
+                  }
                   this.gameCtx.fillRect(enemy.x * tileSize + screenOffset.x, enemy.y * tileSize + screenOffset.y, tileSize, tileSize);
 
                 }
@@ -223,51 +236,54 @@ function Game() {
       }
     }
 
-    this.updateEnemies = function(playerX,playerY) {
+    this.updateEnemies = function(player) {
       for (var i = 0; i < this.enemies.length; i++) {
         var enemy = this.enemies[i];
-        if (Math.abs(enemy.x - playerX) < enemy.sightRange && Math.abs(enemy.y - playerY) < enemy.sightRange) {
-          if (enemy.chasing == false) {
-            enemy.chasing = true;
-            addMessage(enemy.type, enemy.spotsPlayerText);
-          }
+        if (enemy.dead == false) {
+          if (Math.abs(enemy.x - player.x) < enemy.sightRange && Math.abs(enemy.y - player.y) < enemy.sightRange) {
+            if (enemy.chasing == false) {
+              enemy.chasing = true;
+              addMessage(enemy.type, enemy.spotsPlayerText);
+            }
 
-          var newEnemyX = enemy.x;
-          var newEnemyY = enemy.y;
+            var newEnemyX = enemy.x;
+            var newEnemyY = enemy.y;
 
-          //very primative AI
-          if (enemy.x < playerX) {
-            newEnemyX += 1;
-          } else if (enemy.x > playerX) {
-            newEnemyX -= 1;
-          }
-          if (enemy.y > playerY) {
-            newEnemyY -= 1;
-          } else if (enemy.y < playerY) {
-            newEnemyY += 1;
-          }
+            //very primative AI
+            if (enemy.x < player.x) {
+              newEnemyX += 1;
+            } else if (enemy.x > player.x) {
+              newEnemyX -= 1;
+            }
+            if (enemy.y > player.y) {
+              newEnemyY -= 1;
+            } else if (enemy.y < player.y) {
+              newEnemyY += 1;
+            }
 
-          if (mapArray[newEnemyY] != undefined) {
-              if (mapArray[newEnemyY][newEnemyX] != undefined) {
-                console.log(newEnemyX+":"+newEnemyY+":"+mapArray[newEnemyY][newEnemyX]);
-                  if (mapArray[newEnemyY][newEnemyX] != 3) {
-                    //check if player
-                    if (playerX == newEnemyX && playerY == newEnemyY) {
-                      addMessage(enemy.type,enemy.attackText);
-                    } else if ( !this.checkForEnemyAt(newEnemyX,newEnemyY,false)){
-                      enemy.x = newEnemyX;
-                      enemy.y = newEnemyY;
+            if (mapArray[newEnemyY] != undefined) {
+                if (mapArray[newEnemyY][newEnemyX] != undefined) {
+                  console.log(newEnemyX+":"+newEnemyY+":"+mapArray[newEnemyY][newEnemyX]);
+                    if (mapArray[newEnemyY][newEnemyX] != 3) {
+                      //check if player
+                      if (player.x == newEnemyX && player.y == newEnemyY) {
+                        addMessage(enemy.type,enemy.attackText);
+                        player.takeDamage(enemy.damage)
+                      } else if ( !this.checkForEnemyAt(newEnemyX,newEnemyY,false)){
+                        enemy.x = newEnemyX;
+                        enemy.y = newEnemyY;
+                      }
+
                     }
+                }
+            }
 
-                  }
-              }
           }
-
-        }
-        else {
-          if (enemy.chasing == true) {
-            enemy.chasing = false;
-            addMessage(enemy.type, enemy.lostPlayerText);
+          else {
+            if (enemy.chasing == true) {
+              enemy.chasing = false;
+              addMessage(enemy.type, enemy.lostPlayerText);
+            }
           }
         }
       }
@@ -292,13 +308,17 @@ function Game() {
       }
     }
 
-    this.checkForEnemyAt = function(x,y, attack) {
+    this.checkForEnemyAt = function(x,y, attack, damage) {
       for (var i = 0; i < this.enemies.length; i++) {
         var enemy = this.enemies[i];
 
-        if (enemy.x == x && enemy.y == y){
+        if (enemy.x == x && enemy.y == y && enemy.dead == false){
           if (attack) {
             addMessage("PLAYER","You have attacked the enemy.");
+            enemy.hp -= damage;
+            if (enemy.hp <= 0) {
+              enemy.dead = true;
+            }
           }
 
           return true;
@@ -343,4 +363,6 @@ function addMessage(from, message) {
     currentMessageLogText = currentMessageLogText + newMessage;
 
     messageLog.innerHTML = currentMessageLogText;
+
+    messageLog.scrollTop = messageLog.scrollHeight;
 }
