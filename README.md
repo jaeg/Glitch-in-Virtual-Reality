@@ -3,4 +3,8 @@
 TODO
 Trap trigger range
 Trap spot check difficulty
-Stop enemies from overlapping
+
+Traps, player, and enemies need to do actual damage.
+
+Spells
+inventory

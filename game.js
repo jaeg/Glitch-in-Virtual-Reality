@@ -69,8 +69,12 @@ var player = {
 function Enemy(x,y, type) {
   this.x = x;
   this.y = y;
-  this.type = type;
+  this.type = type || "RAT";
   this.sightRange = 5;
+  this.chasing = false;
+  this.attackText = "has attacked the player!";
+  this.spotsPlayerText = "has spotted the player!";
+  this.lostPlayerText = "has lost the trail of the player..";
 }
 
 function Trap(x,y, type) {
@@ -223,6 +227,11 @@ function Game() {
       for (var i = 0; i < this.enemies.length; i++) {
         var enemy = this.enemies[i];
         if (Math.abs(enemy.x - playerX) < enemy.sightRange && Math.abs(enemy.y - playerY) < enemy.sightRange) {
+          if (enemy.chasing == false) {
+            enemy.chasing = true;
+            addMessage(enemy.type, enemy.spotsPlayerText);
+          }
+
           var newEnemyX = enemy.x;
           var newEnemyY = enemy.y;
 
@@ -244,7 +253,7 @@ function Game() {
                   if (mapArray[newEnemyY][newEnemyX] != 3) {
                     //check if player
                     if (playerX == newEnemyX && playerY == newEnemyY) {
-                      addMessage("ENEMY","ENEMY ATTACKED PLAYER!");
+                      addMessage(enemy.type,enemy.attackText);
                     } else if ( !this.checkForEnemyAt(newEnemyX,newEnemyY,false)){
                       enemy.x = newEnemyX;
                       enemy.y = newEnemyY;
@@ -254,6 +263,12 @@ function Game() {
               }
           }
 
+        }
+        else {
+          if (enemy.chasing == true) {
+            enemy.chasing = false;
+            addMessage(enemy.type, enemy.lostPlayerText);
+          }
         }
       }
     }
