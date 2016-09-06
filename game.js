@@ -52,13 +52,17 @@ var player = {
         if (mapArray[newPosY] != undefined) {
             if (mapArray[newPosY][newPosX] != undefined) {
                 if (mapArray[newPosY][newPosX] != 3) {
+                  if (!theGame.checkForEnemyAt(newPosX,newPosY, true)) {
                     this.x = newPosX;
                     this.y = newPosY;
+                  }
 
-                    theGame.checkTraps(this.x, this.y);
+                  theGame.checkTraps(this.x, this.y,this.sightRange);
                 }
             }
         }
+
+        theGame.updateEnemies(this.x, this.y);
     }
 }
 
@@ -66,6 +70,7 @@ function Enemy(x,y, type) {
   this.x = x;
   this.y = y;
   this.type = type;
+  this.sightRange = 5;
 }
 
 function Trap(x,y, type) {
@@ -214,7 +219,46 @@ function Game() {
       }
     }
 
-    this.checkTraps = function(x,y) {
+    this.updateEnemies = function(playerX,playerY) {
+      for (var i = 0; i < this.enemies.length; i++) {
+        var enemy = this.enemies[i];
+        if (Math.abs(enemy.x - playerX) < enemy.sightRange && Math.abs(enemy.y - playerY) < enemy.sightRange) {
+          var newEnemyX = enemy.x;
+          var newEnemyY = enemy.y;
+
+          //very primative AI
+          if (enemy.x < playerX) {
+            newEnemyX += 1;
+          } else if (enemy.x > playerX) {
+            newEnemyX -= 1;
+          }
+          if (enemy.y > playerY) {
+            newEnemyY -= 1;
+          } else if (enemy.y < playerY) {
+            newEnemyY += 1;
+          }
+
+          if (mapArray[newEnemyY] != undefined) {
+              if (mapArray[newEnemyY][newEnemyX] != undefined) {
+                console.log(newEnemyX+":"+newEnemyY+":"+mapArray[newEnemyY][newEnemyX]);
+                  if (mapArray[newEnemyY][newEnemyX] != 3) {
+                    //check if player
+                    if (playerX == newEnemyX && playerY == newEnemyY) {
+                      addMessage("ENEMY","ENEMY ATTACKED PLAYER!");
+                    } else if ( !this.checkForEnemyAt(newEnemyX,newEnemyY,false)){
+                      enemy.x = newEnemyX;
+                      enemy.y = newEnemyY;
+                    }
+
+                  }
+              }
+          }
+
+        }
+      }
+    }
+
+    this.checkTraps = function(x,y,sightRange) {
       for (var i = 0; i < this.traps.length; i++){
         var trap = this.traps[i];
         if (!trap.setOff) {
@@ -224,7 +268,7 @@ function Game() {
           }
 
           if (!trap.spotted) {
-            if (Math.abs(trap.x - x) < 3 && Math.abs(trap.y - y) < 3) {
+            if (Math.abs(trap.x - x) < sightRange && Math.abs(trap.y - y) < sightRange) {
               trap.spotted = true;
               addMessage("TRAP", trap.spotText);
             }
@@ -232,7 +276,24 @@ function Game() {
         }
       }
     }
+
+    this.checkForEnemyAt = function(x,y, attack) {
+      for (var i = 0; i < this.enemies.length; i++) {
+        var enemy = this.enemies[i];
+
+        if (enemy.x == x && enemy.y == y){
+          if (attack) {
+            addMessage("PLAYER","You have attacked the enemy.");
+          }
+
+          return true;
+        }
+      }
+
+      return false;
+    }
 }
+
 
 theGame = new Game();
 //Main Loop
