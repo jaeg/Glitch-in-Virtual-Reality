@@ -32,18 +32,19 @@ var screenOffset = {
 };
 
 //Player location is going to be maintained in map array index notation to prevent conversions
-var player = {
-    x: 1,
-    y: 1,
-    hp: 50,
-    armor: 0,
-    damage: 2,
-    sightRange: 3,
-    inventory: [],
-    takeDamage: function(amount) {
+function Player(){
+    this.x = 1;
+    this.y = 1;
+    this.hp = 50;
+    this.armor = 0;
+    this.damage = 2;
+    this.sightRange = 3;
+    this.inventory = [];
+
+    this.takeDamage = function(amount) {
       this.hp -= amount - this.armor
-    },
-    updateUI: function() {
+    };
+    this.updateUI = function() {
       hpSpan = document.getElementById('hp');
       hpSpan.innerHTML = this.hp;
       damageSpan = document.getElementById('damage');
@@ -53,8 +54,8 @@ var player = {
       sightRangeSpan = document.getElementById('sightrange');
       sightRangeSpan.innerHTML = this.sightRange;
 
-    },
-    move: function(dirX, dirY, avoidCollisions) {
+    };
+    this.move = function(dirX, dirY, avoidCollisions) {
         if (avoidCollisions) {
             this.x += dirX;
             this.y += dirY;
@@ -74,12 +75,12 @@ var player = {
                     this.y = newPosY;
                   }
 
-                  theGame.checkTraps(this);
+                  theGame.checkTraps();
                 }
             }
         }
 
-        theGame.updateEnemies(player);
+        theGame.updateEnemies();
     }
 }
 
@@ -113,6 +114,7 @@ function Game() {
     this.state = "menu"; //menu, play, lose, win
     this.traps = [];
     this.enemies = [];
+    this.player = new Player();
     //Canvas
     this.gameCanvas = document.getElementById('game');
     this.gameCtx = this.gameCanvas.getContext("2d");
@@ -124,16 +126,16 @@ function Game() {
         if (that.state == "play") {
             switch (String.fromCharCode(e.keyCode)) {
                 case 'W':
-                    player.move(0, -1);
+                    that.player.move(0, -1);
                     break;
                 case 'A':
-                    player.move(-1, 0);
+                    that.player.move(-1, 0);
                     break;
                 case 'S':
-                    player.move(0, 1);
+                    that.player.move(0, 1);
                     break;
                 case 'D':
-                    player.move(1, 0);
+                    that.player.move(1, 0);
                     break;
             }
         }
@@ -152,7 +154,7 @@ function Game() {
     }
 
     this.update = function() {
-      player.updateUI();
+      this.player.updateUI();
     }
 
     this.draw = function() {
@@ -215,7 +217,7 @@ function Game() {
                 }
 
                 this.gameCtx.fillStyle = "purple"
-                this.gameCtx.fillRect(player.x * tileSize + screenOffset.x, player.y * tileSize + screenOffset.y, tileSize, tileSize);
+                this.gameCtx.fillRect(this.player.x * tileSize + screenOffset.x, this.player.y * tileSize + screenOffset.y, tileSize, tileSize);
 
             }
         }
@@ -248,11 +250,11 @@ function Game() {
       }
     }
 
-    this.updateEnemies = function(player) {
+    this.updateEnemies = function() {
       for (var i = 0; i < this.enemies.length; i++) {
         var enemy = this.enemies[i];
         if (enemy.dead == false) {
-          if (Math.abs(enemy.x - player.x) < enemy.sightRange && Math.abs(enemy.y - player.y) < enemy.sightRange) {
+          if (Math.abs(enemy.x - this.player.x) < enemy.sightRange && Math.abs(enemy.y - this.player.y) < enemy.sightRange) {
             if (enemy.chasing == false) {
               enemy.chasing = true;
               addMessage(enemy.type, enemy.spotsPlayerText);
@@ -262,25 +264,24 @@ function Game() {
             var newEnemyY = enemy.y;
 
             //very primative AI
-            if (enemy.x < player.x) {
+            if (enemy.x < this.player.x) {
               newEnemyX += 1;
-            } else if (enemy.x > player.x) {
+            } else if (enemy.x > this.player.x) {
               newEnemyX -= 1;
             }
-            if (enemy.y > player.y) {
+            if (enemy.y > this.player.y) {
               newEnemyY -= 1;
-            } else if (enemy.y < player.y) {
+            } else if (enemy.y < this.player.y) {
               newEnemyY += 1;
             }
 
             if (mapArray[newEnemyY] != undefined) {
                 if (mapArray[newEnemyY][newEnemyX] != undefined) {
-                  console.log(newEnemyX+":"+newEnemyY+":"+mapArray[newEnemyY][newEnemyX]);
                     if (mapArray[newEnemyY][newEnemyX] != 3) {
                       //check if player
-                      if (player.x == newEnemyX && player.y == newEnemyY) {
+                      if (this.player.x == newEnemyX && this.player.y == newEnemyY) {
                         addMessage(enemy.type,enemy.attackText);
-                        player.takeDamage(enemy.damage)
+                        this.player.takeDamage(enemy.damage)
                       } else if ( !this.checkForEnemyAt(newEnemyX,newEnemyY,false)){
                         enemy.x = newEnemyX;
                         enemy.y = newEnemyY;
@@ -301,18 +302,18 @@ function Game() {
       }
     }
 
-    this.checkTraps = function(player) {
+    this.checkTraps = function() {
       for (var i = 0; i < this.traps.length; i++){
         var trap = this.traps[i];
         if (!trap.setOff) {
-          if (trap.x == player.x && trap.y == player.y) {
+          if (trap.x == this.player.x && trap.y == this.player.y) {
             trap.setOff = true;
             addMessage("TRAP", trap.triggerText);
-            player.takeDamage(trap.damage);
+            this.player.takeDamage(trap.damage);
           }
 
           if (!trap.spotted) {
-            if (Math.abs(trap.x - player.x) < player.sightRange && Math.abs(trap.y - player.y) < player.sightRange) {
+            if (Math.abs(trap.x - this.player.x) < this.player.sightRange && Math.abs(trap.y - this.player.y) < this.player.sightRange) {
               trap.spotted = true;
               addMessage("TRAP", trap.spotText);
             }
