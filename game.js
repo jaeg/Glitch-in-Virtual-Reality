@@ -41,19 +41,23 @@ function Player(){
     this.sightRange = 3;
     this.inventory = [];
     this.hitRate = 0.7;
+    this.foodCount = 0;
 
     this.takeDamage = function(amount) {
       this.hp -= amount - this.armor
     };
     this.updateUI = function() {
-      hpSpan = document.getElementById('hp');
+      var hpSpan = document.getElementById('hp');
       hpSpan.innerHTML = this.hp;
-      damageSpan = document.getElementById('damage');
+      var damageSpan = document.getElementById('damage');
       damageSpan.innerHTML = this.damage;
-      armorSpan = document.getElementById('armor');
+      var armorSpan = document.getElementById('armor');
       armorSpan.innerHTML = this.armor;
-      sightRangeSpan = document.getElementById('sightrange');
+      var sightRangeSpan = document.getElementById('sightrange');
       sightRangeSpan.innerHTML = this.sightRange;
+
+      var foodSpan = document.getElementById('foodcount');
+      foodSpan.innerHTML = this.foodCount;
 
     };
     this.move = function(dirX, dirY, avoidCollisions) {
@@ -77,6 +81,7 @@ function Player(){
                   }
 
                   theGame.checkTraps();
+                  theGame.checkForItems();
                 }
             }
         }
@@ -103,7 +108,7 @@ function Enemy(x,y, type) {
 function Trap(x,y, type) {
   this.x = x;
   this.y = y;
-  this.type = type;
+  this.type = type || "Pit";
   this.damage = 5;
   this.setOff = false;
   this.spotted = false;
@@ -111,11 +116,19 @@ function Trap(x,y, type) {
   this.triggerText = "You have set off the trap!";
 }
 
+function Item(x,y,type) {
+  this.x = x;
+  this.y = y;
+  this.type = type || "food";
+  this.useText = "Food has been collected!"
+}
+
 function Game() {
     that = this;
     this.state = "menu"; //menu, play, lose, win
     this.traps = [];
     this.enemies = [];
+    this.items = [];
     this.player = new Player();
     //Canvas
     this.gameCanvas = document.getElementById('game');
@@ -139,6 +152,14 @@ function Game() {
                 case 'D':
                     that.player.move(1, 0);
                     break;
+                case 'F':
+                  if (that.player.foodCount > 0) {
+                    addMessage("PLAYER", "Consumed food.");
+                    that.player.hp += Math.floor(Math.random()*10);
+                    that.player.foodCount--;
+                  } else {
+                    addMessage("PLAYER","No food to eat.");
+                  }
             }
         }
         if (that.state != "play") {
@@ -154,6 +175,7 @@ function Game() {
         this.player = new Player();
         this.populateTraps(10);
         this.populateEnemies(3);
+        this.populateItems(10);
     }
 
     this.update = function() {
@@ -207,6 +229,13 @@ function Game() {
 
                 }
 
+                //Draw Items
+                for (var i = 0; i < this.items.length; i++) {
+                  var item = this.items[i];
+                  this.gameCtx.fillStyle = "brown"
+                  this.gameCtx.fillRect(item.x * tileSize + screenOffset.x, item.y * tileSize + screenOffset.y, tileSize, tileSize);
+                }
+
                 //draw enemies
                 for (var i = 0; i < this.enemies.length; i++) {
                   var enemy = this.enemies[i];
@@ -227,6 +256,18 @@ function Game() {
 
     this.cleanUp = function() {
 
+    }
+
+    this.populateItems = function(count){
+      for(var i = 0; i < count; i++) {
+        var x = 0;
+        var y = 0
+        do {
+          x = Math.floor(Math.random()* mapArray[0].length)
+          y = Math.floor(Math.random()* mapArray.length)
+        } while(mapArray[y][x] != 0)
+        this.items.push(new Item(x,y))
+      }
     }
 
     this.populateTraps = function(count){
@@ -311,6 +352,21 @@ function Game() {
       }
     }
 
+    this.checkForItems = function() {
+      for (var i = 0; i < this.items.length; i++) {
+        var item = this.items[i];
+        if (item.x == this.player.x && item.y == this.player.y) {
+          if (item.type == "food") {
+            this.player.foodCount++
+          }
+
+          //remove item
+          this.items.splice(i, 1);
+          return;
+        }
+      }
+    }
+
     this.checkTraps = function() {
       for (var i = 0; i < this.traps.length; i++){
         var trap = this.traps[i];
@@ -338,8 +394,6 @@ function Game() {
         if (enemy.x == x && enemy.y == y && enemy.dead == false){
           if (attack) {
             var hitChance = Math.random();
-            console.log(hitChance);
-            console.log(this.player.hitRate);
             if (hitChance < this.player.hitRate) {
               addMessage("PLAYER","You have attacked the enemy.");
               enemy.hp -= damage;
