@@ -31,6 +31,73 @@ var screenOffset = {
     y: 0
 };
 
+function generateMap(width, height){
+  //Initialize the array
+  mapArray = [];
+  for (var y = 0; y < height; y++){
+    mapArray[y] = [];
+    for (var x = 0; x < width; x++) {
+      mapArray[y][x] = 3; //We are digging out the rooms
+    }
+  }
+
+  for (var i = 0; i < 10; i++) {
+    //Initial Room
+    var roomWidth = 1;
+    var roomHeight = 1;
+    var roomX = 1;
+    var roomY = 1;
+    var tries = 0;
+    do {
+      if (roomIntersects(roomX,roomY,roomWidth,roomHeight)) {
+        tries++;
+      }
+
+      if (tries > 100) {
+        console.log("BREAK");
+        break;
+      }
+      roomWidth = Math.ceil(Math.random()*10);
+      roomHeight = Math.ceil(Math.random()*10);
+      roomX = Math.floor(Math.random()*width);
+      roomY = Math.floor(Math.random()*height);
+    } while (roomX + roomWidth > width || roomY + roomHeight > height || roomIntersects(roomX,roomY,roomWidth,roomHeight))
+
+    carveRoom(roomX,roomY,roomWidth, roomHeight);
+  }
+
+
+
+}
+
+function roomIntersects(x,y,width,height) {
+  if (x + width > mapArray[0].length || y + height > mapArray.length) {
+    return true;
+  }
+  for (var currentY = 0; currentY < height; currentY++) {
+    for (var currentX = 0; currentX < width; currentX++) {
+      if (mapArray[currentY+y][currentX+x] != 3){
+        console.log("Intersect");
+        return true;
+      }
+
+    }
+  }
+  return false;
+}
+
+function carveRoom(x,y, width, height) {
+  if (x + width > mapArray[0].length || y + height > mapArray.length) {
+    return true;
+  }
+  for (var currentY = 0; currentY < height; currentY++) {
+    for (var currentX = 0; currentX < width; currentX++) {
+      mapArray[currentY+y][currentX+x] = 0;
+    }
+  }
+}
+generateMap(640/32,480/32);
+
 //Player location is going to be maintained in map array index notation to prevent conversions
 function Player() {
     this.x = 1;
@@ -176,6 +243,14 @@ function Game() {
         this.populateTraps(10);
         this.populateEnemies(3);
         this.populateItems(10);
+        var x = 0;
+        var y = 0;
+        do {
+            x = Math.floor(Math.random() * mapArray[0].length)
+            y = Math.floor(Math.random() * mapArray.length)
+        } while (mapArray[y][x] != 0)
+        this.player.x = x;
+        this.player.y = y;
     }
 
     this.update = function() {
@@ -359,6 +434,8 @@ function Game() {
                     this.player.foodCount++
                 }
 
+                addMessage("PLAYER","Picked up "+item.type)
+
                 //remove item
                 this.items.splice(i, 1);
                 return;
@@ -398,6 +475,7 @@ function Game() {
                         enemy.hp -= damage;
                         if (enemy.hp <= 0) {
                             enemy.dead = true;
+                            addMessage("PLAYER",enemy.type + " has been slain!");
                         }
                     } else {
                         addMessage("PLAYER", "Attack misssed the enemy!");
