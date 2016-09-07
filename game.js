@@ -40,6 +40,7 @@ function Player(){
     this.damage = 2;
     this.sightRange = 3;
     this.inventory = [];
+    this.hitRate = 0.7;
 
     this.takeDamage = function(amount) {
       this.hp -= amount - this.armor
@@ -89,6 +90,7 @@ function Enemy(x,y, type) {
   this.y = y;
   this.hp = 10;
   this.damage = 1;
+  this.hitRate = 0.5;
   this.dead = false;
   this.type = type || "RAT";
   this.sightRange = 5;
@@ -149,6 +151,7 @@ function Game() {
     this.start = function() {
         //generate map, position player, create enemies, all that fun stuff.
         this.state = "play";
+        this.player = new Player();
         this.populateTraps(10);
         this.populateEnemies(3);
     }
@@ -280,8 +283,14 @@ function Game() {
                     if (mapArray[newEnemyY][newEnemyX] != 3) {
                       //check if player
                       if (this.player.x == newEnemyX && this.player.y == newEnemyY) {
-                        addMessage(enemy.type,enemy.attackText);
-                        this.player.takeDamage(enemy.damage)
+                        var hitChance = Math.random();
+                        if (hitChance < enemy.hitRate) {
+                          addMessage(enemy.type,enemy.attackText);
+                          this.player.takeDamage(enemy.damage)
+                        } else {
+                          addMessage(enemy.type, "Attack missed the player!");
+                        }
+
                       } else if ( !this.checkForEnemyAt(newEnemyX,newEnemyY,false)){
                         enemy.x = newEnemyX;
                         enemy.y = newEnemyY;
@@ -328,11 +337,19 @@ function Game() {
 
         if (enemy.x == x && enemy.y == y && enemy.dead == false){
           if (attack) {
-            addMessage("PLAYER","You have attacked the enemy.");
-            enemy.hp -= damage;
-            if (enemy.hp <= 0) {
-              enemy.dead = true;
+            var hitChance = Math.random();
+            console.log(hitChance);
+            console.log(this.player.hitRate);
+            if (hitChance < this.player.hitRate) {
+              addMessage("PLAYER","You have attacked the enemy.");
+              enemy.hp -= damage;
+              if (enemy.hp <= 0) {
+                enemy.dead = true;
+              }
+            } else {
+              addMessage("PLAYER","Attack misssed the enemy!");
             }
+
           }
 
           return true;
