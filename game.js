@@ -94,7 +94,7 @@ function carveRoom(x,y, width, height) {
     }
   }
 }
-generateMap(640/32,480/32);
+generateMap(100,100);
 
 var itemTypes = ["FOOD","POTION","SWORD","ARMOR"];
 var enemyTypes = ["RAT","BAT","ZOMBIE","GOBLIN"];
@@ -370,6 +370,8 @@ function Game() {
         this.inventoryCursor = 0;
         var x = 0;
         var y = 0;
+
+
         do {
             x = Math.floor(Math.random() * mapArray[0].length)
             y = Math.floor(Math.random() * mapArray.length)
@@ -380,6 +382,15 @@ function Game() {
 
     this.update = function() {
         this.player.updateUI();
+        //Screen move
+        if (this.player.x*tileSize + screenOffset.x + tileSize > this.gameCanvas.width)
+            screenOffset.x -= this.gameCanvas.width;
+        if (this.player.x*tileSize + screenOffset.x < 0)
+            screenOffset.x += this.gameCanvas.width;
+        if (this.player.y*tileSize + screenOffset.y + tileSize > this.gameCanvas.height)
+            screenOffset.y -= this.gameCanvas.height;
+        if (this.player.y*tileSize + screenOffset.y < 0)
+            screenOffset.y += this.gameCanvas.height;
     }
 
     this.draw = function() {
