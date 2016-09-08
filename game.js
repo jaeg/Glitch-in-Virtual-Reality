@@ -54,7 +54,6 @@ function generateMap(width, height){
       }
 
       if (tries > 100) {
-        console.log("BREAK");
         break;
       }
       roomWidth = Math.ceil(Math.random()*10);
@@ -77,7 +76,6 @@ function roomIntersects(x,y,width,height) {
   for (var currentY = 0; currentY < height; currentY++) {
     for (var currentX = 0; currentX < width; currentX++) {
       if (mapArray[currentY+y][currentX+x] != 3){
-        console.log("Intersect");
         return true;
       }
 
