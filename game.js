@@ -116,11 +116,44 @@ function Player() {
     this.hitRate = 0.7;
     this.foodCount = 0;
 
-    this.useItem = function(i) {
-      this.inventory[i].use(this);
+    this.equippedWeapon = "";
+    this.equippedArmor = "";
 
-      this.inventory.splice(i,1);
+    this.useItem = function(i) {
+      if (this.inventory[i].use(this)){ //item.use returns true if item should be removed from bag.
+        this.inventory.splice(i,1);
+      }
     };
+
+    this.tossItem = function(i) {
+      this.inventory.splice(i,1);
+    }
+
+    this.equipItem = function(i) {
+      var item = this.inventory[i];
+
+      if (item.type == "SWORD") {
+        if (this.equippedWeapon != "") {
+          this.equippedWeapon.equipped = false;
+          this.damage -= this.equippedWeapon.buff;
+        }
+
+        this.equippedWeapon = item;
+        this.equippedWeapon.equipped = true;
+        this.damage += this.equippedWeapon.buff;
+      } else if (item.type == "ARMOR") {
+        if (this.equippedArmor != "") {
+          this.equippedArmor.equipped = false;
+          this.armor -= this.equippedArmor.buff;
+        }
+
+        this.equippedArmor = item;
+        this.equippedArmor.equipped = true;
+        this.armor += this.equippedArmor.buff;
+      } else {
+        addMessage("PLAYER","You can't equip that.");
+      }
+    }
 
     this.takeDamage = function(amount) {
         this.hp -= amount - this.armor
@@ -199,16 +232,19 @@ function Item(x, y, type) {
     this.x = x;
     this.y = y;
     this.type = type || "FOOD";
+    this.equipped = false;
     this.useText = "Food has been collected!"
-
+    this.buff = Math.floor(Math.random()*20)
     this.use = function(player) {
-      if (this.type == "FOOD") {}
+      if (this.type == "FOOD") {
         addMessage("PLAYER", "Consumed food.");
         that.player.hp += Math.floor(Math.random() * 10);
-      }
-
-      if (this.type == "POTION") {
+        return true;
+      } else if (this.type == "POTION") {
         this.generateRandomPotionEffect(player);
+        return true;
+      } else {
+        addMessage("PLAYER","You can't use that.  Try equipping it.");
       }
     }
 
@@ -275,8 +311,10 @@ function Game() {
             } else {
               switch (String.fromCharCode(e.keyCode)) {
                 case 'E': //equip
+                  that.player.equipItem(that.inventoryCursor);
                   break;
                 case 'T': //toss
+                  that.player.tossItem(that.inventoryCursor);
                   break;
                 case 'U': //use
                   that.player.useItem(that.inventoryCursor);
@@ -413,6 +451,9 @@ function Game() {
 
               for (var i = 0; i < this.player.inventory.length; i++) {
                 this.gameCtx.fillStyle = "white";
+                if (this.player.inventory[i].equipped == true){
+                  this.gameCtx.fillStyle = "blue";
+                }
                 this.gameCtx.font="20px Courier New";
                 this.gameCtx.fillText(this.player.inventory[i].type,inventoryX + tileSize, inventoryY + 20 + i*tileSize);
               }
@@ -432,7 +473,7 @@ function Game() {
                 x = Math.floor(Math.random() * mapArray[0].length)
                 y = Math.floor(Math.random() * mapArray.length)
             } while (mapArray[y][x] != 0)
-            this.items.push(new Item(x, y,"POTION"))
+            this.items.push(new Item(x, y,"ARMOR"))
         }
     }
 
