@@ -120,38 +120,45 @@ function Player() {
     this.equippedArmor = "";
 
     this.useItem = function(i) {
-      if (this.inventory[i].use(this)){ //item.use returns true if item should be removed from bag.
-        this.inventory.splice(i,1);
+      if (i < this.inventory.length){
+        if (this.inventory[i].use(this)){ //item.use returns true if item should be removed from bag.
+          this.inventory.splice(i,1);
+        }
       }
+
     };
 
     this.tossItem = function(i) {
-      this.inventory.splice(i,1);
+      if (i < this.inventory.length){
+        this.inventory.splice(i,1);
+      }
     }
 
     this.equipItem = function(i) {
-      var item = this.inventory[i];
+      if (i < this.inventory.length){
+        var item = this.inventory[i];
 
-      if (item.type == "SWORD") {
-        if (this.equippedWeapon != "") {
-          this.equippedWeapon.equipped = false;
-          this.damage -= this.equippedWeapon.buff;
+        if (item.type == "SWORD") {
+          if (this.equippedWeapon != "") {
+            this.equippedWeapon.equipped = false;
+            this.damage -= this.equippedWeapon.buff;
+          }
+
+          this.equippedWeapon = item;
+          this.equippedWeapon.equipped = true;
+          this.damage += this.equippedWeapon.buff;
+        } else if (item.type == "ARMOR") {
+          if (this.equippedArmor != "") {
+            this.equippedArmor.equipped = false;
+            this.armor -= this.equippedArmor.buff;
+          }
+
+          this.equippedArmor = item;
+          this.equippedArmor.equipped = true;
+          this.armor += this.equippedArmor.buff;
+        } else {
+          addMessage("PLAYER","You can't equip that.");
         }
-
-        this.equippedWeapon = item;
-        this.equippedWeapon.equipped = true;
-        this.damage += this.equippedWeapon.buff;
-      } else if (item.type == "ARMOR") {
-        if (this.equippedArmor != "") {
-          this.equippedArmor.equipped = false;
-          this.armor -= this.equippedArmor.buff;
-        }
-
-        this.equippedArmor = item;
-        this.equippedArmor.equipped = true;
-        this.armor += this.equippedArmor.buff;
-      } else {
-        addMessage("PLAYER","You can't equip that.");
       }
     }
 
@@ -324,10 +331,16 @@ function Game() {
                   that.player.useItem(that.inventoryCursor);
                   break;
                 case 'W': //Up
-                    that.inventoryCursor -= 1;
+                    if (that.inventoryCursor > 0){
+                      that.inventoryCursor -= 1;
+                    }
+
                   break;
                 case 'S': //Down
+                  if (that.inventoryCursor < that.player.inventory.length - 1){
                     that.inventoryCursor += 1;
+                  }
+
                   break;
               }
 
