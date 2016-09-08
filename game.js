@@ -98,6 +98,12 @@ function carveRoom(x,y, width, height) {
 }
 generateMap(640/32,480/32);
 
+var itemTypes = ["FOOD","POTION","SWORD","ARMOR"];
+var enemyTypes = ["RAT","BAT","ZOMBIE","GOBLIN"];
+var trapTypes = ["PIT","SPIKES","FIRE RUNES","POISON VENTS"];
+var trapText = ["You fell down a pit.", "You were impaled by spikes.", "You set off fire runes.", "Poison blasts you in the face."];
+
+
 //Player location is going to be maintained in map array index notation to prevent conversions
 function Player() {
     this.x = 1;
@@ -109,6 +115,12 @@ function Player() {
     this.inventory = [];
     this.hitRate = 0.7;
     this.foodCount = 0;
+
+    this.useItem = function(i) {
+      this.inventory[i].use(this);
+
+      this.inventory.splice(i,1);
+    };
 
     this.takeDamage = function(amount) {
         this.hp -= amount - this.armor
@@ -186,9 +198,37 @@ function Trap(x, y, type) {
 function Item(x, y, type) {
     this.x = x;
     this.y = y;
-    this.type = type || "food";
+    this.type = type || "FOOD";
     this.useText = "Food has been collected!"
+
+    this.use = function(player) {
+      if (this.type == "FOOD") {}
+        addMessage("PLAYER", "Consumed food.");
+        that.player.hp += Math.floor(Math.random() * 10);
+      }
+
+      if (this.type == "POTION") {
+        this.generateRandomPotionEffect(player);
+      }
+    }
+
+    this.generateRandomPotionEffect = function(player){
+      var effects = ['hp','sightRange','hitRate','damage','armor'];
+      var effect = effects[Math.floor(Math.random()*effects.length)];
+      var multiplier = Math.round(Math.random());
+      var badEffect = Math.round(Math.random()); //50/50 good or bad
+
+      var amount = player[effect] * multiplier;
+      if (badEffect) {
+        player[effect] -= amount;
+        addMessage("ITEM","The potion made you fill ill.")
+      } else {
+        player[effect] += amount;
+        addMessage("ITEM","The potion made you fill impowered.")
+      }
+    }
 }
+
 
 function Game() {
     that = this;
@@ -197,6 +237,8 @@ function Game() {
     this.enemies = [];
     this.items = [];
     this.player = new Player();
+    this.inventoryUp = false;
+    this.inventoryCursor = 0;
     //Canvas
     this.gameCanvas = document.getElementById('game');
     this.gameCtx = this.gameCanvas.getContext("2d");
@@ -206,31 +248,59 @@ function Game() {
 
     this.handleKeyPressed = function(e) {
         if (that.state == "play") {
-            switch (String.fromCharCode(e.keyCode)) {
-                case 'W':
-                    that.player.move(0, -1);
-                    break;
-                case 'A':
-                    that.player.move(-1, 0);
-                    break;
-                case 'S':
-                    that.player.move(0, 1);
-                    break;
-                case 'D':
-                    that.player.move(1, 0);
-                    break;
-                case 'F':
-                    if (that.player.foodCount > 0) {
-                        addMessage("PLAYER", "Consumed food.");
-                        that.player.hp += Math.floor(Math.random() * 10);
-                        that.player.foodCount--;
-                    } else {
-                        addMessage("PLAYER", "No food to eat.");
-                    }
+            if (that.inventoryUp == false) {
+              switch (String.fromCharCode(e.keyCode)) {
+                  case 'W':
+                      that.player.move(0, -1);
+                      break;
+                  case 'A':
+                      that.player.move(-1, 0);
+                      break;
+                  case 'S':
+                      that.player.move(0, 1);
+                      break;
+                  case 'D':
+                      that.player.move(1, 0);
+                      break;
+              }
+
+              if (e.keyCode == 13) {
+                  if (that.inventoryUp == true) {
+                    that.inventoryUp = false;
+                  } else {
+                    that.inventoryUp = true;
+                  }
+              }
+
+            } else {
+              switch (String.fromCharCode(e.keyCode)) {
+                case 'E': //equip
+                  break;
+                case 'T': //toss
+                  break;
+                case 'U': //use
+                  that.player.useItem(that.inventoryCursor);
+                  break;
+                case 'W': //Up
+                    that.inventoryCursor -= 1;
+                  break;
+                case 'S': //Down
+                    that.inventoryCursor += 1;
+                  break;
+              }
+
+              if (e.keyCode == 13) {
+                  if (that.inventoryUp == true) {
+                    that.inventoryUp = false;
+                  } else {
+                    that.inventoryUp = true;
+                  }
+              }
             }
+
         }
         if (that.state != "play") {
-            if (e.keyCode == 13 && that.state != "play") {
+            if (e.keyCode == 13) {
                 that.start();
             }
         }
@@ -243,6 +313,8 @@ function Game() {
         this.populateTraps(10);
         this.populateEnemies(3);
         this.populateItems(10);
+        this.inventoryUp = false;
+        this.inventoryCursor = 0;
         var x = 0;
         var y = 0;
         do {
@@ -326,6 +398,25 @@ function Game() {
             this.gameCtx.fillStyle = "purple"
             this.gameCtx.fillRect(this.player.x * tileSize + screenOffset.x, this.player.y * tileSize + screenOffset.y, tileSize, tileSize);
 
+
+            //draw inventory
+            if (this.inventoryUp) {
+              var inventoryX = this.gameCanvas.width/4;
+              var inventoryY = this.gameCanvas.height/4;
+              var inventoryWidth = this.gameCanvas.width/2;
+              var inventoryHeight = this.gameCanvas.height/2
+              this.gameCtx.fillStyle = "black";
+              this.gameCtx.fillRect(inventoryX,inventoryY,inventoryWidth, inventoryHeight);
+
+              this.gameCtx.fillStyle = "white";
+              this.gameCtx.fillRect(inventoryX,inventoryY + this.inventoryCursor*tileSize,tileSize, tileSize);
+
+              for (var i = 0; i < this.player.inventory.length; i++) {
+                this.gameCtx.fillStyle = "white";
+                this.gameCtx.font="20px Courier New";
+                this.gameCtx.fillText(this.player.inventory[i].type,inventoryX + tileSize, inventoryY + 20 + i*tileSize);
+              }
+            }
         }
     }
 
@@ -341,7 +432,7 @@ function Game() {
                 x = Math.floor(Math.random() * mapArray[0].length)
                 y = Math.floor(Math.random() * mapArray.length)
             } while (mapArray[y][x] != 0)
-            this.items.push(new Item(x, y))
+            this.items.push(new Item(x, y,"POTION"))
         }
     }
 
@@ -429,14 +520,11 @@ function Game() {
     this.checkForItems = function() {
         for (var i = 0; i < this.items.length; i++) {
             var item = this.items[i];
+
             if (item.x == this.player.x && item.y == this.player.y) {
-                if (item.type == "food") {
-                    this.player.foodCount++
-                }
-
-                addMessage("PLAYER","Picked up "+item.type)
-
+              this.player.inventory.push(item);
                 //remove item
+                addMessage("PLAYER","Picked up "+item.type)
                 this.items.splice(i, 1);
                 return;
             }
