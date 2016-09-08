@@ -156,7 +156,11 @@ function Player() {
     }
 
     this.takeDamage = function(amount) {
-        this.hp -= amount - this.armor
+      var damage = amount - this.armor;
+      if (damage < 0) {
+        damage = 0;
+      }
+      this.hp -= damage
     };
     this.updateUI = function() {
         var hpSpan = document.getElementById('hp');
