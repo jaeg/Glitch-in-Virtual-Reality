@@ -41,7 +41,7 @@ function generateMap(width, height){
     }
   }
 
-  for (var i = 0; i < 10; i++) {
+  for (var i = 0; i < 100; i++) {
     //Initial Room
     var roomWidth = 1;
     var roomHeight = 1;
@@ -365,7 +365,7 @@ function Game() {
         this.player = new Player();
         this.populateTraps(10);
         this.populateEnemies(3);
-        this.populateItems(10);
+        this.populateItems(50);
         this.inventoryUp = false;
         this.inventoryCursor = 0;
         var x = 0;
@@ -499,7 +499,7 @@ function Game() {
                 x = Math.floor(Math.random() * mapArray[0].length)
                 y = Math.floor(Math.random() * mapArray.length)
             } while (mapArray[y][x] != 0)
-            this.items.push(new Item(x, y,"ARMOR"))
+            this.items.push(new Item(x, y,itemTypes[Math.floor(Math.random()*itemTypes.length)]))
         }
     }
 

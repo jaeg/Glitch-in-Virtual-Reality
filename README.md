@@ -3,8 +3,8 @@
 TODO
 Trap trigger range
 Trap spot check difficulty
-
-Traps, player, and enemies need to do actual damage.
-
 Spells
-inventory
+Randomize enemies, traps, and items.
+Map Generation
+Actually be able to win
+Actually be able to die.
