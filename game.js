@@ -1,7 +1,7 @@
 //SPRITES
 var tilesImage = new Image();
-//tilesImage.src = "img/tiles.png";
-var spriteTileSize = 16
+tilesImage.src = "img/minirogue-all.png";
+var spriteTileSize = 8;
 
 //MAPS
 var tileSize = 32;
@@ -42,7 +42,8 @@ function generateMap(width, height){
   }
 
   for (var i = 0; i < 100; i++) {
-    //Initial Room
+    var minimumWidth = 4;
+    var minimumHeight = 4;
     var roomWidth = 1;
     var roomHeight = 1;
     var roomX = 1;
@@ -56,11 +57,11 @@ function generateMap(width, height){
       if (tries > 100) {
         break;
       }
-      roomWidth = Math.ceil(Math.random()*10);
-      roomHeight = Math.ceil(Math.random()*10);
+      roomWidth = Math.ceil(Math.random()*10)+minimumWidth;
+      roomHeight = Math.ceil(Math.random()*10)+minimumHeight;
       roomX = Math.floor(Math.random()*width);
       roomY = Math.floor(Math.random()*height);
-    } while (roomX + roomWidth > width || roomY + roomHeight > height || roomIntersects(roomX,roomY,roomWidth,roomHeight))
+    } while (roomX + roomWidth > width  || roomY + roomHeight > height  || roomIntersects(roomX,roomY,roomWidth,roomHeight))
 
     carveRoom(roomX,roomY,roomWidth, roomHeight);
   }
@@ -90,7 +91,11 @@ function carveRoom(x,y, width, height) {
   }
   for (var currentY = 0; currentY < height; currentY++) {
     for (var currentX = 0; currentX < width; currentX++) {
-      mapArray[currentY+y][currentX+x] = 0;
+      if (currentY == 0 || currentX == 0 || currentY == height-1 || currentX == width -1) {
+        mapArray[currentY+y][currentX+x] = 1;
+      } else {
+        mapArray[currentY+y][currentX+x] = 0;
+      }
     }
   }
 }
@@ -112,7 +117,6 @@ function Player() {
     this.sightRange = 3;
     this.inventory = [];
     this.hitRate = 0.7;
-    this.foodCount = 0;
 
     this.equippedWeapon = "";
     this.equippedArmor = "";
@@ -177,8 +181,8 @@ function Player() {
         var sightRangeSpan = document.getElementById('sightrange');
         sightRangeSpan.innerHTML = this.sightRange;
 
-        var foodSpan = document.getElementById('foodcount');
-        foodSpan.innerHTML = this.foodCount;
+        var hitrateSpan = document.getElementById('hitrate');
+        hitrateSpan.innerHTML = this.hitRate;
 
     };
     this.move = function(dirX, dirY, avoidCollisions) {
@@ -195,7 +199,7 @@ function Player() {
         //When enemies get added I may have to iterate through them to see if I touch one though.
         if (mapArray[newPosY] != undefined) {
             if (mapArray[newPosY][newPosX] != undefined) {
-                if (mapArray[newPosY][newPosX] != 3) {
+                if (mapArray[newPosY][newPosX] == 0) {
                     if (!theGame.checkForEnemyAt(newPosX, newPosY, true, this.damage)) {
                         this.x = newPosX;
                         this.y = newPosY;
@@ -260,10 +264,12 @@ function Item(x, y, type) {
     this.generateRandomPotionEffect = function(player){
       var effects = ['hp','sightRange','hitRate','damage','armor'];
       var effect = effects[Math.floor(Math.random()*effects.length)];
-      var multiplier = Math.round(Math.random());
+      var multiplier = Math.random();
       var badEffect = Math.round(Math.random()); //50/50 good or bad
-
       var amount = player[effect] * multiplier;
+      if (effect != "hitRate") {
+        amount = Math.round(amount);
+      }
       if (badEffect) {
         player[effect] -= amount;
         addMessage("ITEM","The potion made you fill ill.")
@@ -287,9 +293,10 @@ function Game() {
     //Canvas
     this.gameCanvas = document.getElementById('game');
     this.gameCtx = this.gameCanvas.getContext("2d");
+    this.gameCtx.imageSmoothingEnabled = false;
 
     this.gameCanvas.width = 640;
-    this.gameCanvas.height = 640;
+    this.gameCanvas.height = 480;
 
     this.handleKeyPressed = function(e) {
         if (that.state == "play") {
@@ -364,7 +371,7 @@ function Game() {
         this.state = "play";
         this.player = new Player();
         this.populateTraps(10);
-        this.populateEnemies(3);
+        this.populateEnemies(40);
         this.populateItems(50);
         this.inventoryUp = false;
         this.inventoryCursor = 0;
@@ -395,6 +402,7 @@ function Game() {
 
     this.draw = function() {
         this.gameCanvas.width = this.gameCanvas.width; //clear the canvas
+        this.gameCtx.imageSmoothingEnabled = false;
         if (this.state == "menu") {
             this.gameCtx.fillStyle = "black";
             this.gameCtx.fillRect(0, 0, this.gameCanvas.width, this.gameCanvas.height);
@@ -408,19 +416,10 @@ function Game() {
             for (var y = 0; y < mapArray.length; y++) {
                 for (var x = 0; x < mapArray[y].length; x++) {
                     var tile = mapArray[y][x];
-                    switch (tile) {
-                        case 0:
-                            this.gameCtx.fillStyle = "black";
-                            break;
-                        case 1:
-                            this.gameCtx.fillStyle = "red";
-                            break;
-                        case 3:
-                            this.gameCtx.fillStyle = "blue";
-                            break;
 
+                    if (tile == 1) {
+                      this.drawSprite(tilesImage, 2, 0, spriteTileSize, tileSize, x,y);
                     }
-                    this.gameCtx.fillRect(x * tileSize + screenOffset.x, y * tileSize + screenOffset.y, tileSize, tileSize);
                 }
             }
 
@@ -428,14 +427,11 @@ function Game() {
             for (var i = 0; i < this.traps.length; i++) {
                 var trap = this.traps[i];
                 if (trap.spotted && !trap.setOff) {
-                    this.gameCtx.fillStyle = "teal"
-                    this.gameCtx.fillRect(trap.x * tileSize + screenOffset.x, trap.y * tileSize + screenOffset.y, tileSize, tileSize);
+                  this.drawSprite(tilesImage, 7, 0, spriteTileSize, tileSize, trap.x,trap.y);
                 }
 
                 if (trap.setOff) {
-                    this.gameCtx.fillStyle = "grey"
-                    this.gameCtx.fillRect(trap.x * tileSize + screenOffset.x, trap.y * tileSize + screenOffset.y, tileSize, tileSize);
-
+                  this.drawSprite(tilesImage, 6, 0, spriteTileSize, tileSize, trap.x,trap.y);
                 }
 
             }
@@ -443,25 +439,61 @@ function Game() {
             //Draw Items
             for (var i = 0; i < this.items.length; i++) {
                 var item = this.items[i];
-                this.gameCtx.fillStyle = "brown"
-                this.gameCtx.fillRect(item.x * tileSize + screenOffset.x, item.y * tileSize + screenOffset.y, tileSize, tileSize);
-            }
+
+                var xOffset = 0;
+                var yOffset = 0;
+
+                switch (item.type) {
+                  case "POTION":
+                    xOffset = 5;
+                    yOffset = 3;
+                  break;
+
+                  case "FOOD":
+                    xOffset = 1;
+                    yOffset = 3;
+                  break;
+
+                  case "SWORD":
+                    xOffset = 1;
+                    yOffset = 4;
+                  break;
+
+                  case "ARMOR":
+                    xOffset = 14;
+                    yOffset = 4;
+                  break;
+                }
+
+                this.drawSprite(tilesImage, xOffset, yOffset, spriteTileSize, tileSize, item.x,item.y)
+
+              }
 
             //draw enemies
             for (var i = 0; i < this.enemies.length; i++) {
                 var enemy = this.enemies[i];
-                if (enemy.dead == false) {
-                    this.gameCtx.fillStyle = "green";
-                } else {
-                    this.gameCtx.fillStyle = "darkgreen";
-                }
-                this.gameCtx.fillRect(enemy.x * tileSize + screenOffset.x, enemy.y * tileSize + screenOffset.y, tileSize, tileSize);
 
+                var xOffset = 0;
+                var yOffset = 0;
+
+                switch (enemy.type) {
+                  case "RAT":
+                    xOffset = 14;
+                    yOffset = 6;
+
+                  break;
+                }
+
+                if (enemy.dead == false) {
+                  this.drawSprite(tilesImage, xOffset, yOffset, spriteTileSize, tileSize, enemy.x,enemy.y)
+                } else {
+                  this.drawSprite(tilesImage, 10, 1, spriteTileSize, tileSize, enemy.x,enemy.y)
+                }
             }
 
-            this.gameCtx.fillStyle = "purple"
             this.gameCtx.fillRect(this.player.x * tileSize + screenOffset.x, this.player.y * tileSize + screenOffset.y, tileSize, tileSize);
 
+            this.drawSprite(tilesImage, 5, 5, spriteTileSize, tileSize, this.player.x,this.player.y)
 
             //draw inventory
             if (this.inventoryUp) {
@@ -491,6 +523,9 @@ function Game() {
 
     }
 
+    this.drawSprite = function(img, xOffset, yOffset, spriteSize, tileSize, x,y){
+      this.gameCtx.drawImage(img,xOffset*spriteSize,yOffset*spriteSize,spriteSize,spriteSize,x*tileSize+ screenOffset.x,y*tileSize + screenOffset.y, tileSize, tileSize);
+    }
     this.populateItems = function(count) {
         for (var i = 0; i < count; i++) {
             var x = 0;
@@ -554,7 +589,7 @@ function Game() {
 
                     if (mapArray[newEnemyY] != undefined) {
                         if (mapArray[newEnemyY][newEnemyX] != undefined) {
-                            if (mapArray[newEnemyY][newEnemyX] != 3) {
+                            if (mapArray[newEnemyY][newEnemyX] == 0) {
                                 //check if player
                                 if (this.player.x == newEnemyX && this.player.y == newEnemyY) {
                                     var hitChance = Math.random();
