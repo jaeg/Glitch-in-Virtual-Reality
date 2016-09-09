@@ -369,6 +369,12 @@ function Game() {
     this.start = function() {
         //generate map, position player, create enemies, all that fun stuff.
         this.state = "play";
+        clearMessages();
+        addMessage("GM","I am zzzzhe game master.");
+        addMessage("SYSTEM","*malfunction on level 5*");
+        addMessage("GM","Welcome to the Dungeons of Ma'kidar.");
+        addMessage("SYSTEM","*ERROR 503 can not disengage virtual reality helmet*");
+        addMessage("UNKNOWN","You must defeat me to live.");
         this.player = new Player();
         this.populateTraps(10);
         this.populateEnemies(40);
@@ -377,7 +383,6 @@ function Game() {
         this.inventoryCursor = 0;
         var x = 0;
         var y = 0;
-
 
         do {
             x = Math.floor(Math.random() * mapArray[0].length)
@@ -566,14 +571,13 @@ function Game() {
         for (var i = 0; i < this.enemies.length; i++) {
             var enemy = this.enemies[i];
             if (enemy.dead == false) {
+              var newEnemyX = enemy.x;
+              var newEnemyY = enemy.y;
                 if (Math.abs(enemy.x - this.player.x) < enemy.sightRange && Math.abs(enemy.y - this.player.y) < enemy.sightRange) {
                     if (enemy.chasing == false) {
                         enemy.chasing = true;
                         addMessage(enemy.type, enemy.spotsPlayerText);
                     }
-
-                    var newEnemyX = enemy.x;
-                    var newEnemyY = enemy.y;
 
                     //very primative AI
                     if (enemy.x < this.player.x) {
@@ -586,33 +590,35 @@ function Game() {
                     } else if (enemy.y < this.player.y) {
                         newEnemyY += 1;
                     }
-
-                    if (mapArray[newEnemyY] != undefined) {
-                        if (mapArray[newEnemyY][newEnemyX] != undefined) {
-                            if (mapArray[newEnemyY][newEnemyX] == 0) {
-                                //check if player
-                                if (this.player.x == newEnemyX && this.player.y == newEnemyY) {
-                                    var hitChance = Math.random();
-                                    if (hitChance < enemy.hitRate) {
-                                        addMessage(enemy.type, enemy.attackText);
-                                        this.player.takeDamage(enemy.damage)
-                                    } else {
-                                        addMessage(enemy.type, "Attack missed the player!");
-                                    }
-
-                                } else if (!this.checkForEnemyAt(newEnemyX, newEnemyY, false)) {
-                                    enemy.x = newEnemyX;
-                                    enemy.y = newEnemyY;
-                                }
-
-                            }
-                        }
-                    }
-
                 } else {
                     if (enemy.chasing == true) {
                         enemy.chasing = false;
                         addMessage(enemy.type, enemy.lostPlayerText);
+                    }
+
+                    newEnemyX += Math.floor(Math.random()*3)-1
+                    newEnemyY += Math.floor(Math.random()*3)-1
+                }
+
+                if (mapArray[newEnemyY] != undefined) {
+                    if (mapArray[newEnemyY][newEnemyX] != undefined) {
+                        if (mapArray[newEnemyY][newEnemyX] == 0) {
+                            //check if player
+                            if (this.player.x == newEnemyX && this.player.y == newEnemyY) {
+                                var hitChance = Math.random();
+                                if (hitChance < enemy.hitRate) {
+                                    addMessage(enemy.type, enemy.attackText);
+                                    this.player.takeDamage(enemy.damage)
+                                } else {
+                                    addMessage(enemy.type, "Attack missed the player!");
+                                }
+
+                            } else if (!this.checkForEnemyAt(newEnemyX, newEnemyY, false)) {
+                                enemy.x = newEnemyX;
+                                enemy.y = newEnemyY;
+                            }
+
+                        }
                     }
                 }
             }
@@ -717,4 +723,9 @@ function addMessage(from, message) {
     messageLog.innerHTML = currentMessageLogText;
 
     messageLog.scrollTop = messageLog.scrollHeight;
+}
+
+function clearMessages() {
+  var messageLog = document.getElementById("messageLog");
+  messageLog.innerHTML = "<b>Message Log</b></br>";
 }
