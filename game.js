@@ -31,79 +31,79 @@ var screenOffset = {
     y: 0
 };
 
-function generateMap(width, height){
-  //Initialize the array
-  mapArray = [];
-  for (var y = 0; y < height; y++){
-    mapArray[y] = [];
-    for (var x = 0; x < width; x++) {
-      mapArray[y][x] = 3; //We are digging out the rooms
+function generateMap(width, height) {
+    //Initialize the array
+    mapArray = [];
+    for (var y = 0; y < height; y++) {
+        mapArray[y] = [];
+        for (var x = 0; x < width; x++) {
+            mapArray[y][x] = 3; //We are digging out the rooms
+        }
     }
-  }
 
-  for (var i = 0; i < 100; i++) {
-    var minimumWidth = 4;
-    var minimumHeight = 4;
-    var roomWidth = 1;
-    var roomHeight = 1;
-    var roomX = 1;
-    var roomY = 1;
-    var tries = 0;
-    do {
-      if (roomIntersects(roomX,roomY,roomWidth,roomHeight)) {
-        tries++;
-      }
+    for (var i = 0; i < 100; i++) {
+        var minimumWidth = 4;
+        var minimumHeight = 4;
+        var roomWidth = 1;
+        var roomHeight = 1;
+        var roomX = 1;
+        var roomY = 1;
+        var tries = 0;
+        do {
+            if (roomIntersects(roomX, roomY, roomWidth, roomHeight)) {
+                tries++;
+            }
 
-      if (tries > 100) {
-        break;
-      }
-      roomWidth = Math.ceil(Math.random()*10)+minimumWidth;
-      roomHeight = Math.ceil(Math.random()*10)+minimumHeight;
-      roomX = Math.floor(Math.random()*width);
-      roomY = Math.floor(Math.random()*height);
-    } while (roomX + roomWidth > width  || roomY + roomHeight > height  || roomIntersects(roomX,roomY,roomWidth,roomHeight))
+            if (tries > 100) {
+                break;
+            }
+            roomWidth = Math.ceil(Math.random() * 10) + minimumWidth;
+            roomHeight = Math.ceil(Math.random() * 10) + minimumHeight;
+            roomX = Math.floor(Math.random() * width);
+            roomY = Math.floor(Math.random() * height);
+        } while (roomX + roomWidth > width || roomY + roomHeight > height || roomIntersects(roomX, roomY, roomWidth, roomHeight))
 
-    carveRoom(roomX,roomY,roomWidth, roomHeight);
-  }
+        carveRoom(roomX, roomY, roomWidth, roomHeight);
+    }
 
 
 
 }
 
-function roomIntersects(x,y,width,height) {
-  if (x + width > mapArray[0].length || y + height > mapArray.length) {
-    return true;
-  }
-  for (var currentY = 0; currentY < height; currentY++) {
-    for (var currentX = 0; currentX < width; currentX++) {
-      if (mapArray[currentY+y][currentX+x] != 3){
+function roomIntersects(x, y, width, height) {
+    if (x + width > mapArray[0].length || y + height > mapArray.length) {
         return true;
-      }
-
     }
-  }
-  return false;
+    for (var currentY = 0; currentY < height; currentY++) {
+        for (var currentX = 0; currentX < width; currentX++) {
+            if (mapArray[currentY + y][currentX + x] != 3) {
+                return true;
+            }
+
+        }
+    }
+    return false;
 }
 
-function carveRoom(x,y, width, height) {
-  if (x + width > mapArray[0].length || y + height > mapArray.length) {
-    return true;
-  }
-  for (var currentY = 0; currentY < height; currentY++) {
-    for (var currentX = 0; currentX < width; currentX++) {
-      if (currentY == 0 || currentX == 0 || currentY == height-1 || currentX == width -1) {
-        mapArray[currentY+y][currentX+x] = 1;
-      } else {
-        mapArray[currentY+y][currentX+x] = 0;
-      }
+function carveRoom(x, y, width, height) {
+    if (x + width > mapArray[0].length || y + height > mapArray.length) {
+        return true;
     }
-  }
+    for (var currentY = 0; currentY < height; currentY++) {
+        for (var currentX = 0; currentX < width; currentX++) {
+            if (currentY == 0 || currentX == 0 || currentY == height - 1 || currentX == width - 1) {
+                mapArray[currentY + y][currentX + x] = 1;
+            } else {
+                mapArray[currentY + y][currentX + x] = 0;
+            }
+        }
+    }
 }
-generateMap(100,100);
+generateMap(100, 100);
 
-var itemTypes = ["FOOD","POTION","SWORD","ARMOR"];
-var enemyTypes = ["RAT","BAT","ZOMBIE","GOBLIN"];
-var trapTypes = ["PIT","SPIKES","FIRE RUNES","POISON VENTS"];
+var itemTypes = ["FOOD", "POTION", "SWORD", "ARMOR"];
+var enemyTypes = ["RAT", "BAT", "ZOMBIE", "GOBLIN"];
+var trapTypes = ["PIT", "SPIKES", "FIRE RUNES", "POISON VENTS"];
 var trapText = ["You fell down a pit.", "You were impaled by spikes.", "You set off fire runes.", "Poison blasts you in the face."];
 
 
@@ -122,54 +122,54 @@ function Player() {
     this.equippedArmor = "";
 
     this.useItem = function(i) {
-      if (i < this.inventory.length){
-        if (this.inventory[i].use(this)){ //item.use returns true if item should be removed from bag.
-          this.inventory.splice(i,1);
+        if (i < this.inventory.length) {
+            if (this.inventory[i].use(this)) { //item.use returns true if item should be removed from bag.
+                this.inventory.splice(i, 1);
+            }
         }
-      }
 
     };
 
     this.tossItem = function(i) {
-      if (i < this.inventory.length){
-        this.inventory.splice(i,1);
-      }
+        if (i < this.inventory.length) {
+            this.inventory.splice(i, 1);
+        }
     }
 
     this.equipItem = function(i) {
-      if (i < this.inventory.length){
-        var item = this.inventory[i];
+        if (i < this.inventory.length) {
+            var item = this.inventory[i];
 
-        if (item.type == "SWORD") {
-          if (this.equippedWeapon != "") {
-            this.equippedWeapon.equipped = false;
-            this.damage -= this.equippedWeapon.buff;
-          }
+            if (item.type == "SWORD") {
+                if (this.equippedWeapon != "") {
+                    this.equippedWeapon.equipped = false;
+                    this.damage -= this.equippedWeapon.buff;
+                }
 
-          this.equippedWeapon = item;
-          this.equippedWeapon.equipped = true;
-          this.damage += this.equippedWeapon.buff;
-        } else if (item.type == "ARMOR") {
-          if (this.equippedArmor != "") {
-            this.equippedArmor.equipped = false;
-            this.armor -= this.equippedArmor.buff;
-          }
+                this.equippedWeapon = item;
+                this.equippedWeapon.equipped = true;
+                this.damage += this.equippedWeapon.buff;
+            } else if (item.type == "ARMOR") {
+                if (this.equippedArmor != "") {
+                    this.equippedArmor.equipped = false;
+                    this.armor -= this.equippedArmor.buff;
+                }
 
-          this.equippedArmor = item;
-          this.equippedArmor.equipped = true;
-          this.armor += this.equippedArmor.buff;
-        } else {
-          addMessage("PLAYER","You can't equip that.");
+                this.equippedArmor = item;
+                this.equippedArmor.equipped = true;
+                this.armor += this.equippedArmor.buff;
+            } else {
+                addMessage("PLAYER", "You can't equip that.");
+            }
         }
-      }
     }
 
     this.takeDamage = function(amount) {
-      var damage = amount - this.armor;
-      if (damage < 0) {
-        damage = 0;
-      }
-      this.hp -= damage
+        var damage = amount - this.armor;
+        if (damage < 0) {
+            damage = 0;
+        }
+        this.hp -= damage
     };
     this.updateUI = function() {
         var hpSpan = document.getElementById('hp');
@@ -247,36 +247,36 @@ function Item(x, y, type) {
     this.type = type || "FOOD";
     this.equipped = false;
     this.useText = "Food has been collected!"
-    this.buff = Math.floor(Math.random()*20)
+    this.buff = Math.floor(Math.random() * 20)
     this.use = function(player) {
-      if (this.type == "FOOD") {
-        addMessage("PLAYER", "Consumed food.");
-        that.player.hp += Math.floor(Math.random() * 10);
-        return true;
-      } else if (this.type == "POTION") {
-        this.generateRandomPotionEffect(player);
-        return true;
-      } else {
-        addMessage("PLAYER","You can't use that.  Try equipping it.");
-      }
+        if (this.type == "FOOD") {
+            addMessage("PLAYER", "Consumed food.");
+            that.player.hp += Math.floor(Math.random() * 10);
+            return true;
+        } else if (this.type == "POTION") {
+            this.generateRandomPotionEffect(player);
+            return true;
+        } else {
+            addMessage("PLAYER", "You can't use that.  Try equipping it.");
+        }
     }
 
-    this.generateRandomPotionEffect = function(player){
-      var effects = ['hp','sightRange','hitRate','damage','armor'];
-      var effect = effects[Math.floor(Math.random()*effects.length)];
-      var multiplier = Math.random();
-      var badEffect = Math.round(Math.random()); //50/50 good or bad
-      var amount = player[effect] * multiplier;
-      if (effect != "hitRate") {
-        amount = Math.round(amount);
-      }
-      if (badEffect) {
-        player[effect] -= amount;
-        addMessage("ITEM","The potion made you fill ill.")
-      } else {
-        player[effect] += amount;
-        addMessage("ITEM","The potion made you fill impowered.")
-      }
+    this.generateRandomPotionEffect = function(player) {
+        var effects = ['hp', 'sightRange', 'hitRate', 'damage', 'armor'];
+        var effect = effects[Math.floor(Math.random() * effects.length)];
+        var multiplier = Math.random();
+        var badEffect = Math.round(Math.random()); //50/50 good or bad
+        var amount = player[effect] * multiplier;
+        if (effect != "hitRate") {
+            amount = Math.round(amount);
+        }
+        if (badEffect) {
+            player[effect] -= amount;
+            addMessage("ITEM", "The potion made you fill ill.")
+        } else {
+            player[effect] += amount;
+            addMessage("ITEM", "The potion made you fill impowered.")
+        }
     }
 }
 
@@ -301,61 +301,61 @@ function Game() {
     this.handleKeyPressed = function(e) {
         if (that.state == "play") {
             if (that.inventoryUp == false) {
-              switch (String.fromCharCode(e.keyCode)) {
-                  case 'W':
-                      that.player.move(0, -1);
-                      break;
-                  case 'A':
-                      that.player.move(-1, 0);
-                      break;
-                  case 'S':
-                      that.player.move(0, 1);
-                      break;
-                  case 'D':
-                      that.player.move(1, 0);
-                      break;
-              }
+                switch (String.fromCharCode(e.keyCode)) {
+                    case 'W':
+                        that.player.move(0, -1);
+                        break;
+                    case 'A':
+                        that.player.move(-1, 0);
+                        break;
+                    case 'S':
+                        that.player.move(0, 1);
+                        break;
+                    case 'D':
+                        that.player.move(1, 0);
+                        break;
+                }
 
-              if (e.keyCode == 13) {
-                  if (that.inventoryUp == true) {
-                    that.inventoryUp = false;
-                  } else {
-                    that.inventoryUp = true;
-                  }
-              }
+                if (e.keyCode == 13) {
+                    if (that.inventoryUp == true) {
+                        that.inventoryUp = false;
+                    } else {
+                        that.inventoryUp = true;
+                    }
+                }
 
             } else {
-              switch (String.fromCharCode(e.keyCode)) {
-                case 'E': //equip
-                  that.player.equipItem(that.inventoryCursor);
-                  break;
-                case 'T': //toss
-                  that.player.tossItem(that.inventoryCursor);
-                  break;
-                case 'U': //use
-                  that.player.useItem(that.inventoryCursor);
-                  break;
-                case 'W': //Up
-                    if (that.inventoryCursor > 0){
-                      that.inventoryCursor -= 1;
+                switch (String.fromCharCode(e.keyCode)) {
+                    case 'E': //equip
+                        that.player.equipItem(that.inventoryCursor);
+                        break;
+                    case 'T': //toss
+                        that.player.tossItem(that.inventoryCursor);
+                        break;
+                    case 'U': //use
+                        that.player.useItem(that.inventoryCursor);
+                        break;
+                    case 'W': //Up
+                        if (that.inventoryCursor > 0) {
+                            that.inventoryCursor -= 1;
+                        }
+
+                        break;
+                    case 'S': //Down
+                        if (that.inventoryCursor < that.player.inventory.length - 1) {
+                            that.inventoryCursor += 1;
+                        }
+
+                        break;
+                }
+
+                if (e.keyCode == 13) {
+                    if (that.inventoryUp == true) {
+                        that.inventoryUp = false;
+                    } else {
+                        that.inventoryUp = true;
                     }
-
-                  break;
-                case 'S': //Down
-                  if (that.inventoryCursor < that.player.inventory.length - 1){
-                    that.inventoryCursor += 1;
-                  }
-
-                  break;
-              }
-
-              if (e.keyCode == 13) {
-                  if (that.inventoryUp == true) {
-                    that.inventoryUp = false;
-                  } else {
-                    that.inventoryUp = true;
-                  }
-              }
+                }
             }
 
         }
@@ -370,11 +370,11 @@ function Game() {
         //generate map, position player, create enemies, all that fun stuff.
         this.state = "play";
         clearMessages();
-        addMessage("GM","I am zzzzhe game master.");
-        addMessage("SYSTEM","*malfunction on level 5*");
-        addMessage("GM","Welcome to the Dungeons of Ma'kidar.");
-        addMessage("SYSTEM","*ERROR 503 can not disengage virtual reality helmet*");
-        addMessage("UNKNOWN","You must defeat me to live.");
+        addMessage("GM", "I am zzzzhe game master.");
+        addMessage("SYSTEM", "*malfunction on level 5*");
+        addMessage("GM", "Welcome to the Dungeons of Ma'kidar.");
+        addMessage("SYSTEM", "*ERROR 503 can not disengage virtual reality helmet*");
+        addMessage("UNKNOWN", "You must defeat me to live.");
         this.player = new Player();
         this.populateTraps(10);
         this.populateEnemies(40);
@@ -395,13 +395,13 @@ function Game() {
     this.update = function() {
         this.player.updateUI();
         //Screen move
-        if (this.player.x*tileSize + screenOffset.x + tileSize > this.gameCanvas.width)
+        if (this.player.x * tileSize + screenOffset.x + tileSize > this.gameCanvas.width)
             screenOffset.x -= this.gameCanvas.width;
-        if (this.player.x*tileSize + screenOffset.x < 0)
+        if (this.player.x * tileSize + screenOffset.x < 0)
             screenOffset.x += this.gameCanvas.width;
-        if (this.player.y*tileSize + screenOffset.y + tileSize > this.gameCanvas.height)
+        if (this.player.y * tileSize + screenOffset.y + tileSize > this.gameCanvas.height)
             screenOffset.y -= this.gameCanvas.height;
-        if (this.player.y*tileSize + screenOffset.y < 0)
+        if (this.player.y * tileSize + screenOffset.y < 0)
             screenOffset.y += this.gameCanvas.height;
     }
 
@@ -423,7 +423,7 @@ function Game() {
                     var tile = mapArray[y][x];
 
                     if (tile == 1) {
-                      this.drawSprite(tilesImage, 2, 0, spriteTileSize, tileSize, x,y);
+                        this.drawSprite(tilesImage, 2, 0, spriteTileSize, tileSize, x, y);
                     }
                 }
             }
@@ -432,11 +432,11 @@ function Game() {
             for (var i = 0; i < this.traps.length; i++) {
                 var trap = this.traps[i];
                 if (trap.spotted && !trap.setOff) {
-                  this.drawSprite(tilesImage, 7, 0, spriteTileSize, tileSize, trap.x,trap.y);
+                    this.drawSprite(tilesImage, 7, 0, spriteTileSize, tileSize, trap.x, trap.y);
                 }
 
                 if (trap.setOff) {
-                  this.drawSprite(tilesImage, 6, 0, spriteTileSize, tileSize, trap.x,trap.y);
+                    this.drawSprite(tilesImage, 6, 0, spriteTileSize, tileSize, trap.x, trap.y);
                 }
 
             }
@@ -449,30 +449,30 @@ function Game() {
                 var yOffset = 0;
 
                 switch (item.type) {
-                  case "POTION":
-                    xOffset = 5;
-                    yOffset = 3;
-                  break;
+                    case "POTION":
+                        xOffset = 5;
+                        yOffset = 3;
+                        break;
 
-                  case "FOOD":
-                    xOffset = 1;
-                    yOffset = 3;
-                  break;
+                    case "FOOD":
+                        xOffset = 1;
+                        yOffset = 3;
+                        break;
 
-                  case "SWORD":
-                    xOffset = 1;
-                    yOffset = 4;
-                  break;
+                    case "SWORD":
+                        xOffset = 1;
+                        yOffset = 4;
+                        break;
 
-                  case "ARMOR":
-                    xOffset = 14;
-                    yOffset = 4;
-                  break;
+                    case "ARMOR":
+                        xOffset = 14;
+                        yOffset = 4;
+                        break;
                 }
 
-                this.drawSprite(tilesImage, xOffset, yOffset, spriteTileSize, tileSize, item.x,item.y)
+                this.drawSprite(tilesImage, xOffset, yOffset, spriteTileSize, tileSize, item.x, item.y)
 
-              }
+            }
 
             //draw enemies
             for (var i = 0; i < this.enemies.length; i++) {
@@ -482,44 +482,44 @@ function Game() {
                 var yOffset = 0;
 
                 switch (enemy.type) {
-                  case "RAT":
-                    xOffset = 14;
-                    yOffset = 6;
+                    case "RAT":
+                        xOffset = 14;
+                        yOffset = 6;
 
-                  break;
+                        break;
                 }
 
                 if (enemy.dead == false) {
-                  this.drawSprite(tilesImage, xOffset, yOffset, spriteTileSize, tileSize, enemy.x,enemy.y)
+                    this.drawSprite(tilesImage, xOffset, yOffset, spriteTileSize, tileSize, enemy.x, enemy.y)
                 } else {
-                  this.drawSprite(tilesImage, 10, 1, spriteTileSize, tileSize, enemy.x,enemy.y)
+                    this.drawSprite(tilesImage, 10, 1, spriteTileSize, tileSize, enemy.x, enemy.y)
                 }
             }
 
             this.gameCtx.fillRect(this.player.x * tileSize + screenOffset.x, this.player.y * tileSize + screenOffset.y, tileSize, tileSize);
 
-            this.drawSprite(tilesImage, 5, 5, spriteTileSize, tileSize, this.player.x,this.player.y)
+            this.drawSprite(tilesImage, 5, 5, spriteTileSize, tileSize, this.player.x, this.player.y)
 
             //draw inventory
             if (this.inventoryUp) {
-              var inventoryX = this.gameCanvas.width/4;
-              var inventoryY = this.gameCanvas.height/4;
-              var inventoryWidth = this.gameCanvas.width/2;
-              var inventoryHeight = this.gameCanvas.height/2
-              this.gameCtx.fillStyle = "black";
-              this.gameCtx.fillRect(inventoryX,inventoryY,inventoryWidth, inventoryHeight);
+                var inventoryX = this.gameCanvas.width / 4;
+                var inventoryY = this.gameCanvas.height / 4;
+                var inventoryWidth = this.gameCanvas.width / 2;
+                var inventoryHeight = this.gameCanvas.height / 2
+                this.gameCtx.fillStyle = "black";
+                this.gameCtx.fillRect(inventoryX, inventoryY, inventoryWidth, inventoryHeight);
 
-              this.gameCtx.fillStyle = "white";
-              this.gameCtx.fillRect(inventoryX,inventoryY + this.inventoryCursor*tileSize,tileSize, tileSize);
-
-              for (var i = 0; i < this.player.inventory.length; i++) {
                 this.gameCtx.fillStyle = "white";
-                if (this.player.inventory[i].equipped == true){
-                  this.gameCtx.fillStyle = "blue";
+                this.gameCtx.fillRect(inventoryX, inventoryY + this.inventoryCursor * tileSize, tileSize, tileSize);
+
+                for (var i = 0; i < this.player.inventory.length; i++) {
+                    this.gameCtx.fillStyle = "white";
+                    if (this.player.inventory[i].equipped == true) {
+                        this.gameCtx.fillStyle = "blue";
+                    }
+                    this.gameCtx.font = "20px Courier New";
+                    this.gameCtx.fillText(this.player.inventory[i].type, inventoryX + tileSize, inventoryY + 20 + i * tileSize);
                 }
-                this.gameCtx.font="20px Courier New";
-                this.gameCtx.fillText(this.player.inventory[i].type,inventoryX + tileSize, inventoryY + 20 + i*tileSize);
-              }
             }
         }
     }
@@ -528,8 +528,8 @@ function Game() {
 
     }
 
-    this.drawSprite = function(img, xOffset, yOffset, spriteSize, tileSize, x,y){
-      this.gameCtx.drawImage(img,xOffset*spriteSize,yOffset*spriteSize,spriteSize,spriteSize,x*tileSize+ screenOffset.x,y*tileSize + screenOffset.y, tileSize, tileSize);
+    this.drawSprite = function(img, xOffset, yOffset, spriteSize, tileSize, x, y) {
+        this.gameCtx.drawImage(img, xOffset * spriteSize, yOffset * spriteSize, spriteSize, spriteSize, x * tileSize + screenOffset.x, y * tileSize + screenOffset.y, tileSize, tileSize);
     }
     this.populateItems = function(count) {
         for (var i = 0; i < count; i++) {
@@ -539,7 +539,7 @@ function Game() {
                 x = Math.floor(Math.random() * mapArray[0].length)
                 y = Math.floor(Math.random() * mapArray.length)
             } while (mapArray[y][x] != 0)
-            this.items.push(new Item(x, y,itemTypes[Math.floor(Math.random()*itemTypes.length)]))
+            this.items.push(new Item(x, y, itemTypes[Math.floor(Math.random() * itemTypes.length)]))
         }
     }
 
@@ -571,8 +571,8 @@ function Game() {
         for (var i = 0; i < this.enemies.length; i++) {
             var enemy = this.enemies[i];
             if (enemy.dead == false) {
-              var newEnemyX = enemy.x;
-              var newEnemyY = enemy.y;
+                var newEnemyX = enemy.x;
+                var newEnemyY = enemy.y;
                 if (Math.abs(enemy.x - this.player.x) < enemy.sightRange && Math.abs(enemy.y - this.player.y) < enemy.sightRange) {
                     if (enemy.chasing == false) {
                         enemy.chasing = true;
@@ -596,8 +596,8 @@ function Game() {
                         addMessage(enemy.type, enemy.lostPlayerText);
                     }
 
-                    newEnemyX += Math.floor(Math.random()*3)-1
-                    newEnemyY += Math.floor(Math.random()*3)-1
+                    newEnemyX += Math.floor(Math.random() * 3) - 1
+                    newEnemyY += Math.floor(Math.random() * 3) - 1
                 }
 
                 if (mapArray[newEnemyY] != undefined) {
@@ -630,9 +630,9 @@ function Game() {
             var item = this.items[i];
 
             if (item.x == this.player.x && item.y == this.player.y) {
-              this.player.inventory.push(item);
+                this.player.inventory.push(item);
                 //remove item
-                addMessage("PLAYER","Picked up "+item.type)
+                addMessage("PLAYER", "Picked up " + item.type)
                 this.items.splice(i, 1);
                 return;
             }
@@ -671,7 +671,7 @@ function Game() {
                         enemy.hp -= damage;
                         if (enemy.hp <= 0) {
                             enemy.dead = true;
-                            addMessage("PLAYER",enemy.type + " has been slain!");
+                            addMessage("PLAYER", enemy.type + " has been slain!");
                         }
                     } else {
                         addMessage("PLAYER", "Attack misssed the enemy!");
@@ -726,6 +726,6 @@ function addMessage(from, message) {
 }
 
 function clearMessages() {
-  var messageLog = document.getElementById("messageLog");
-  messageLog.innerHTML = "<b>Message Log</b></br>";
+    var messageLog = document.getElementById("messageLog");
+    messageLog.innerHTML = "<b>Message Log</b></br>";
 }
