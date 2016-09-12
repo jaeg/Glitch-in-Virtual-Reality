@@ -348,6 +348,9 @@ function Game() {
                     case 'D':
                         that.player.move(1, 0);
                         break;
+                    case 'M':
+                        that.map = !that.map;
+                        break;
                 }
 
                 if (e.keyCode == 13) {
@@ -415,6 +418,7 @@ function Game() {
         this.populateItems(50);
         this.inventoryUp = false;
         this.inventoryCursor = 0;
+        this.map = false;
         var x = 0;
         var y = 0;
 
@@ -563,19 +567,22 @@ function Game() {
             this.drawSprite(tilesImage, 5, 0, spriteTileSize, tileSize, this.stairsX, this.stairsY);
 
             //Mini map
-            this.gameCtx.fillStyle="white";
-            this.gameCtx.fillRect(this.player.x*4, this.player.y*4 , 4, 4);
-            for (var y = 0; y < map.length; y++) {
-                for (var x = 0; x < map[y].length; x++) {
-                    var tile = map[y][x];
+            if (this.map){
+              this.gameCtx.fillStyle="white";
+              this.gameCtx.fillRect(this.player.x*4, this.player.y*4 , 4, 4);
+              for (var y = 0; y < map.length; y++) {
+                  for (var x = 0; x < map[y].length; x++) {
+                      var tile = map[y][x];
 
-                    if (tile == 1) {
-                        this.gameCtx.fillStyle="red";
-                        this.gameCtx.fillRect(x*4 , y*4 , 4, 4);
+                      if (tile == 1) {
+                          this.gameCtx.fillStyle="red";
+                          this.gameCtx.fillRect(x*4 , y*4 , 4, 4);
 
-                    }
-                }
+                      }
+                  }
+              }
             }
+
             //draw inventory
             if (this.inventoryUp) {
                 var inventoryX = this.gameCanvas.width / 4;
@@ -716,11 +723,18 @@ function Game() {
         for (var i = 0; i < this.items.length; i++) {
             var item = this.items[i];
 
-            if (item.x == this.player.x && item.y == this.player.y && this.player.inventory.length < 10) {
-                this.player.inventory.push(item);
-                //remove item
-                addMessage("PLAYER", "Picked up " + item.type)
-                this.items.splice(i, 1);
+            if (item.x == this.player.x && item.y == this.player.y ) {
+                if (this.player.inventory.length < 10) {
+                  this.player.inventory.push(item);
+                  //remove item
+                  addMessage("PLAYER", "Picked up " + item.type)
+                  this.items.splice(i, 1);
+
+                } else {
+                  addMessage("PLAYER","You have too much in your inventory to pick this up.");
+                }
+
+
                 return;
             }
         }
