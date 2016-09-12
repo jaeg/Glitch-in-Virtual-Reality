@@ -474,6 +474,26 @@ function Game() {
             this.gameCtx.fillText("Hit Enter To Start", 240, 240);
         }
 
+        if (this.state == "win") {
+            this.gameCtx.fillStyle = "black";
+            this.gameCtx.fillRect(0, 0, this.gameCanvas.width, this.gameCanvas.height);
+
+            this.gameCtx.fillStyle = "white";
+            this.gameCtx.font = "20px Courier New";
+            this.gameCtx.fillText("You have escaped!", 240, 200);
+            this.gameCtx.fillText("Hit Enter To Start", 240, 240);
+        }
+
+        if (this.state == "lose") {
+            this.gameCtx.fillStyle = "black";
+            this.gameCtx.fillRect(0, 0, this.gameCanvas.width, this.gameCanvas.height);
+
+            this.gameCtx.fillStyle = "white";
+            this.gameCtx.font = "20px Courier New";
+            this.gameCtx.fillText("You have perished!", 240, 200);
+            this.gameCtx.fillText("Hit Enter To Start", 240, 240);
+        }
+
         if (this.state == "play") {
             for (var y = 0; y < map.length; y++) {
                 for (var x = 0; x < map[y].length; x++) {
