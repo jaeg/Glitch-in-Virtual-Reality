@@ -382,7 +382,7 @@ function Item(x, y, type) {
     this.type = type || "FOOD";
     this.equipped = false;
     this.useText = "Food has been collected!"
-    this.buff = Math.floor(Math.random() * 20)
+    this.buff = GetRandom(1,4);
     this.use = function(player) {
         if (this.type == "FOOD") {
             addMessage("PLAYER", "Consumed food.");
