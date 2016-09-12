@@ -129,7 +129,7 @@ function roomIntersects(x, y, width, height) {
 generateMap(100);
 
 var itemTypes = ["FOOD", "POTION", "SWORD", "ARMOR"];
-var enemyTypes = ["RAT", "BAT","GHOST","WRAITH","ZOMBIE","OOZE","BIGOOZE"];
+var enemyTypes = ["RAT", "BAT","GHOST","WRAITH","ZOMBIE","OOZE","BIGOOZE","BEHOLDER"];
 var trapTypes = ["PIT", "SPIKES", "FIRE RUNES", "POISON VENTS"];
 var trapText = ["You fell down a pit.", "You were impaled by spikes.", "You set off fire runes.", "Poison blasts you in the face."];
 
@@ -315,7 +315,7 @@ function createRandomEnemy(x,y) {
 
       case "BIGOOZE":
       enemy.type = "BIGOOZE"
-      enemy.hp = 10;
+      enemy.hp = 20;
       enemy.big = true;
       enemy.damage = 4;
       enemy.sightRange = 5;
@@ -324,6 +324,19 @@ function createRandomEnemy(x,y) {
       enemy.yOffset = 5;
       enemy.numTurns = 1;
       enemy.coolsDown = true;
+      break;
+
+      case "BEHOLDER":
+      enemy.type = "BEHOLDER"
+      enemy.hp = 25;
+      enemy.big = true;
+      enemy.damage = 6;
+      enemy.sightRange = 5;
+      enemy.hitRate = 0.5;
+      enemy.xOffset = 2;
+      enemy.yOffset = 5;
+      enemy.numTurns = 1;
+      enemy.coolsDown = false;
       break;
 
       case "BAT":
@@ -356,7 +369,7 @@ function createRandomEnemy(x,y) {
       enemy.hp = 20;
       enemy.damage = 3;
       enemy.sightRange = 7;
-      enemy.hitRate = 0.5;
+      enemy.hitRate = 0.3;
       enemy.xOffset = 10;
       enemy.yOffset = 6;
       enemy.spotsPlayerText = "You feel intense dread.";
@@ -560,14 +573,8 @@ function Game() {
         this.player.updateUI();
 
         //Screen move
-        if (this.player.x * tileSize + screenOffset.x + tileSize > this.gameCanvas.width/2)
-            screenOffset.x -= tileSize;
-        if (this.player.x * tileSize + screenOffset.x < this.gameCanvas.width/2)
-            screenOffset.x += tileSize;
-        if (this.player.y * tileSize + screenOffset.y + tileSize > this.gameCanvas.height/2)
-            screenOffset.y -= tileSize;
-        if (this.player.y * tileSize + screenOffset.y < this.gameCanvas.height/2)
-            screenOffset.y += tileSize;
+        screenOffset.x = -this.player.x * tileSize + this.gameCanvas.width/2
+        screenOffset.y = -this.player.y * tileSize + this.gameCanvas.height/2
 
         //Check for win
         if (this.player.x == this.stairsX  && this.player.y == this.stairsY) {
