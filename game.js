@@ -271,7 +271,6 @@ function Enemy(x, y, type) {
 function createRandomEnemy(x,y) {
   var enemy = new Enemy(x,y);
   enemyType = enemyTypes[GetRandom(0,enemyTypes.length)];
-  enemyType = "BIGOOZE";
     switch (enemyType) {
       case "RAT":
       enemy.type = "RAT"
