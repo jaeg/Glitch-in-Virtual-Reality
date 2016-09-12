@@ -12,9 +12,6 @@ var screenOffset = {
     y: 0
 };
 
-
-var rooms = [];
-//Based on http://bigbadwofl.me/random-dungeon-generator/
 function generateMap(map_size) {
     //Initialize the array
     map = [];
@@ -25,133 +22,106 @@ function generateMap(map_size) {
         }
     }
 
-    //Generate Rooms
-    var room_count = GetRandom(15, 31);
-    var min_size = 5;
-    var max_size = 15;
+    //place room in center
+    var roomWidth = GetRandom(10, 20);
+    var roomHeight = GetRandom(10, 20);
+    createRoom(Math.round(map_size / 2 - roomWidth / 2), Math.round(map_size / 2 - roomHeight / 2), roomWidth, roomHeight);
 
-    for (var i = 0; i < room_count; i++) {
-      var room = {connectedTo:[]};
+    var room_max = 20
+    for (var i = 0; i < room_max; i++) {
+        var done = false;
+        while (!done) {
+            var x = GetRandom(1, map_size - 1);
+            var y = GetRandom(1, map_size - 1);
 
-      room.x = GetRandom(1, map_size - max_size - 1);
-      room.y = GetRandom(1, map_size - max_size - 1);
-      room.w = GetRandom(min_size, max_size);
-      room.h = GetRandom(min_size, max_size);
+            if (x > 0 && x < map[y].length - 1 && y < map.length - 1 && y > 0) {
+                if (map[y][x] == 1) {
+                    var roomWidth = GetRandom(10, 20);
+                    var roomHeight = GetRandom(10, 20);
+                    //find out which direction to build the roomWidth
+                    //up
+                    if (map[y - 1][x] == 3) {
+                        if (map[y][x + 1] == 1 && map[y][x - 1] == 1 && map[y + 1][x] != 1) {
+                            if (!roomIntersects(x - roomWidth / 2, y - roomHeight + 1, roomWidth, roomHeight)) {
+                                createRoom(x - roomWidth / 2, y - roomHeight + 1, roomWidth, roomHeight);
+                                map[y][x] = 2;
+                                done = true;
+                            }
+                        }
+                    }
 
-      if (DoesCollide(room)) {
-          i--;
-          continue;
-      }
-      room.w--;
-      room.h--;
+                    //down
+                    if (map[y + 1][x] == 3) {
 
-      rooms.push(room);
-    }
-    //Squash rooms
-    for (var i = 0; i < 10; i++) {
-        for (var j = 0; j < rooms.length; j++) {
-            var room = rooms[j];
-            while (true) {
-                var old_position = {
-                    x: room.x,
-                    y: room.y
-                };
-                if (room.x > 1) room.x--;
-                if (room.y > 1) room.y--;
-                if ((room.x == 1) && (room.y == 1)) break;
-                if (this.DoesCollide(room, j)) {
-                    room.x = old_position.x;
-                    room.y = old_position.y;
-                    break;
+                        if (map[y][x + 1] == 1 && map[y][x - 1] == 1 && map[y - 1][x] != 1) {
+                            if (!roomIntersects(x - roomWidth / 2, y, roomWidth, roomHeight)) {
+                                createRoom(x - roomWidth / 2, y, roomWidth, roomHeight);
+                                map[y][x] = 2;
+                                done = true;
+                            }
+                        }
+
+                    }
+
+                    //left
+                    if (map[y][x - 1] == 3) {
+                        if (map[y + 1][x] == 1 && map[y - 1][x] == 1 && map[y][x - 1] != 1) {
+                            if (!roomIntersects(x - roomWidth + 1, y - roomHeight / 2, roomWidth, roomHeight)) {
+                                createRoom(x - roomWidth + 1, y - roomHeight / 2, roomWidth, roomHeight);
+                                map[y][x] = 2;
+                                done = true;
+                            }
+                        }
+                    }
+
+                    //right
+                    if (map[y][x + 1] == 3) {
+                        if (map[y + 1][x] == 1 && map[y - 1][x] == 1 && map[y][x + 1] != 1) {
+                            if (!roomIntersects(x, y - roomHeight / 2, roomWidth, roomHeight)) {
+                                createRoom(x, y - roomHeight / 2, roomWidth, roomHeight);
+                                map[y][x] = 2;
+                                done = true;
+                            }
+                        }
+                    }
+
                 }
             }
         }
     }
 
-    //Create corridors
-    for (i = 0; i < room_count; i++) {
-        var roomA = rooms[i];
-        var roomB = FindClosestRoom(roomA);
+}
 
-        roomA.connectedTo.push(roomB);
-        roomB.connectedTo.push(roomA);
 
-        pointA = {
-            x: GetRandom(roomA.x, roomA.x + roomA.w),
-            y: GetRandom(roomA.y, roomA.y + roomA.h)
-        };
-        pointB = {
-            x: GetRandom(roomB.x, roomB.x + roomB.w),
-            y: GetRandom(roomB.y, roomB.y + roomB.h)
-        };
-        while ((pointB.x != pointA.x) || (pointB.y != pointA.y)) {
-            if (pointB.x != pointA.x) {
-                if (pointB.x > pointA.x) pointB.x--;
-                else pointB.x++;
-            }
-            else if (pointB.y != pointA.y) {
-                if (pointB.y > pointA.y) pointB.y--;
-                else pointB.y++;
-            }
-
-            map[pointB.y][pointB.x] = 0;
-        }
-    }
-    //Translate rooms to map
-    for (i = 0; i < room_count; i++) {
-        var room = rooms[i];
-        for (var x = room.x; x < room.x + room.w; x++) {
-            for (var y = room.y; y < room.y + room.h; y++) {
+function createRoom(ax, ay, aw, ah) {
+    for (var x = ax; x < ax + aw; x++) {
+        for (var y = ay; y < ay + ah; y++) {
+            if (y == ay || x == ax || y == ay + ah - 1 || x == ax + aw - 1) {
+                map[y][x] = 1
+            } else {
                 map[y][x] = 0;
             }
         }
     }
+}
 
-    //Create Walls
-    for (var x = 0; x < map_size; x++) {
-        for (var y = 0; y < map_size; y++) {
-            if (map[y][x] == 0) {
-                for (var xx = x - 1; xx <= x + 1; xx++) {
-                    for (var yy = y - 1; yy <= y + 1; yy++) {
-                        if (map[yy][xx] == 3) map[yy][xx] = 1;
-                    }
-                }
+function roomIntersects(x, y, width, height) {
+    if (x + width > map[0].length - 1 || y + height > map.length - 1) {
+        return true;
+    }
+
+    if (y < 1 || x < 1) {
+        return true;
+    }
+
+    for (var currentY = 0; currentY < height; currentY++) {
+        for (var currentX = 0; currentX < width; currentX++) {
+            if (map[currentY + y] == undefined) return true;
+            if (map[currentY + y][currentX + x] == undefined) return true;
+            if (map[currentY + y][currentX + x] == 0) {
+                return true;
             }
         }
-    }
-}
-
-function FindClosestRoom(room) {
-    var mid = {
-        x: room.x + (room.w / 2),
-        y: room.y + (room.h / 2)
-    };
-    var closest = null;
-    var closest_distance = 1000;
-    for (var i = 0; i < rooms.length; i++) {
-        var check = rooms[i];
-        if (check == room) continue;
-        if (room.connectedTo.indexOf(check) != -1) continue;
-        if (check.connectedTo.indexOf(room) != -1) continue;
-        var check_mid = {
-            x: check.x + (check.w / 2),
-            y: check.y + (check.h / 2)
-        };
-        var distance = Math.abs(mid.x - check_mid.x) + Math.abs(mid.y - check_mid.y);
-        if (distance < closest_distance) {
-            closest_distance = distance;
-            closest = check;
-        }
-    }
-    return closest;
-}
-
-function DoesCollide(room, ignore) {
-    for (var i = 0; i < rooms.length; i++) {
-        if (i == ignore) continue;
-        var check = rooms[i];
-        if (!((room.x + room.w < check.x) || (room.x > check.x + check.w) || (room.y + room.h < check.y) || (room.y > check.y + check.h)))
-            return true;
     }
 
     return false;
@@ -257,10 +227,15 @@ function Player() {
         //When enemies get added I may have to iterate through them to see if I touch one though.
         if (map[newPosY] != undefined) {
             if (map[newPosY][newPosX] != undefined) {
-                if (map[newPosY][newPosX] == 0) {
+                if (map[newPosY][newPosX] == 0 || map[newPosY][newPosX] == 2) {
                     if (!theGame.checkForEnemyAt(newPosX, newPosY, true, this.damage)) {
                         this.x = newPosX;
                         this.y = newPosY;
+
+                        if (map[newPosY][newPosX] == 2) {
+                          map[newPosY][newPosX] = 0;
+                          addMessage("PLAYER","You opened the door with a creak.");
+                        }
                     }
 
                     theGame.checkTraps();
@@ -457,7 +432,7 @@ function Game() {
         do {
             x = Math.floor(Math.random() * map[0].length)
             y = Math.floor(Math.random() * map.length)
-        } while (map[y][x] != 0 || (Math.abs(x-this.player.x) < map.length/4 && Math.abs(y-this.player.y) < map.length/4))
+        } while (map[y][x] != 0)// || (Math.abs(x-this.player.x) < map.length/4 && Math.abs(y-this.player.y) < map.length/4))
         this.stairsX = x;
         this.stairsY = y;
     }
@@ -503,7 +478,10 @@ function Game() {
 
                     if (tile == 1) {
                         this.drawSprite(tilesImage, 2, 0, spriteTileSize, tileSize, x, y);
+                    }
 
+                    if (tile == 2) {
+                      this.drawSprite(tilesImage, 11, 1, spriteTileSize, tileSize, x, y);
                     }
 
                     if (tile == 3) {
