@@ -23,11 +23,11 @@ function generateMap(map_size) {
     }
 
     //place room in center
-    var roomWidth = GetRandom(10, 20);
-    var roomHeight = GetRandom(10, 20);
+    var roomWidth = GetRandom(5, 10);
+    var roomHeight = GetRandom(5, 10);
     createRoom(Math.round(map_size / 2 - roomWidth / 2), Math.round(map_size / 2 - roomHeight / 2), roomWidth, roomHeight);
 
-    var room_max = 20
+    var room_max = 25;
     for (var i = 0; i < room_max; i++) {
         var done = false;
         while (!done) {
@@ -413,9 +413,9 @@ function Game() {
         addMessage("SYSTEM", "*ERROR 503 can not disengage virtual reality helmet*");
         addMessage("UNKNOWN", "You must defeat me to live.");
         this.player = new Player();
-        this.populateTraps(10);
-        this.populateEnemies(1);
-        this.populateItems(50);
+        this.populateTraps(30);
+        this.populateEnemies(30);
+        this.populateItems(15);
         this.inventoryUp = false;
         this.inventoryCursor = 0;
         this.map = false;
@@ -435,7 +435,7 @@ function Game() {
         do {
             x = Math.floor(Math.random() * map[0].length)
             y = Math.floor(Math.random() * map.length)
-        } while (map[y][x] != 0)// || (Math.abs(x-this.player.x) < map.length/4 && Math.abs(y-this.player.y) < map.length/4))
+        } while (map[y][x] != 0 || (Math.abs(x-this.player.x) < map.length/4 && Math.abs(y-this.player.y) < map.length/4))
         this.stairsX = x;
         this.stairsY = y;
     }
