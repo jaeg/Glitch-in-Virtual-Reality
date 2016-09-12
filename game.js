@@ -191,8 +191,12 @@ function Player() {
         }
     }
 
-    this.takeDamage = function(amount) {
-        var damage = amount - this.armor;
+    this.takeDamage = function(amount, ignoreArmor) {
+        var damage = amount;
+        if (!ignoreArmor) {
+          damage = amount - this.armor;
+        }
+
         if (damage < 0) {
             damage = 0;
         }
@@ -519,6 +523,12 @@ function Game() {
         this.inventoryUp = false;
         this.inventoryCursor = 0;
         this.map = false;
+        this.items = [];
+        this.enemies = [];
+        this.traps = [];
+
+        generateMap(100);
+
         var x = 0;
         var y = 0;
 
@@ -684,7 +694,7 @@ function Game() {
                   if (enemy.dead == false) {
                       this.drawSprite(tilesImage, enemy.xOffset, enemy.yOffset, spriteTileSize*2, tileSize, enemy.x, enemy.y,2)
                   } else {
-                      this.drawSprite(tilesImage, 10, 1, spriteTileSize, tileSize*2, enemy.x, enemy.y,2)
+                      this.drawSprite(tilesImage, 10, 1, spriteTileSize, tileSize, enemy.x, enemy.y,2)
                   }
                 }
 
@@ -918,7 +928,7 @@ function Game() {
                 if (trap.x == this.player.x && trap.y == this.player.y) {
                     trap.setOff = true;
                     addMessage("TRAP", trap.triggerText);
-                    this.player.takeDamage(trap.damage);
+                    this.player.takeDamage(trap.damage, true);
                 }
 
                 if (!trap.spotted) {
