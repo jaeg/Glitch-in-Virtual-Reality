@@ -129,7 +129,7 @@ function roomIntersects(x, y, width, height) {
 generateMap(100);
 
 var itemTypes = ["FOOD", "POTION", "SWORD", "ARMOR"];
-var enemyTypes = ["RAT", "BAT","GHOST","WRAITH","ZOMBIE","OOZE","BIGOOZE","BEHOLDER"];
+var enemyTypes = ["RAT", "BAT","GHOST","WRAITH","ZOMBIE","DRAGONLING","OOZE","BIGOOZE","BEHOLDER","DEATH", "BASILISK", "GIANTSKELETON", "DRAGON"];
 var trapTypes = ["PIT", "SPIKES", "FIRE RUNES", "POISON VENTS"];
 var trapText = ["You fell down a pit.", "You were impaled by spikes.", "You set off fire runes.", "Poison blasts you in the face."];
 
@@ -200,7 +200,8 @@ function Player() {
         if (damage < 0) {
             damage = 0;
         }
-        this.hp -= damage
+        this.hp -= damage;
+        addMessage("PLAYER","Took " + damage + " damage.");
     };
     this.updateUI = function() {
         var hpSpan = document.getElementById('hp');
@@ -266,6 +267,7 @@ function Enemy(x, y, type) {
     this.numTurns = 1;
     this.coolsDown = false;
     this.coolingDown = false;
+    this.ghost = false;
     this.big = false;
     this.attackText = "has attacked the player!";
     this.spotsPlayerText = "has spotted the player!";
@@ -301,6 +303,19 @@ function createRandomEnemy(x,y) {
       enemy.coolsDown = true;
       break;
 
+      case "SKELETON":
+      enemy.type = "SKELETON"
+      enemy.hp = 7;
+      enemy.damage = 2;
+      enemy.sightRange = 5;
+      enemy.hitRate = 0.7;
+      enemy.xOffset = 9;
+      enemy.yOffset = 6;
+      enemy.numTurns = 1;
+      enemy.spotsPlayerText = "has started shambling towards the player.";
+      enemy.coolsDown = false;
+      break;
+
       case "OOZE":
       enemy.type = "OOZE"
       enemy.hp = 10;
@@ -331,12 +346,75 @@ function createRandomEnemy(x,y) {
       enemy.hp = 25;
       enemy.big = true;
       enemy.damage = 6;
-      enemy.sightRange = 5;
-      enemy.hitRate = 0.5;
+      enemy.sightRange = 7;
+      enemy.hitRate = 0.8;
       enemy.xOffset = 2;
       enemy.yOffset = 5;
       enemy.numTurns = 1;
+      enemy.coolsDown = true;
+      enemy.spotsPlayerText = "I see you...";
+      enemy.lostPlayerText = "Where did he go?";
+      enemy.attackText = "Has stared you down.";
+      break;
+
+      case "DEATH":
+      enemy.type = "DEATH"
+      enemy.hp = 25;
+      enemy.big = true;
+      enemy.damage = 6;
+      enemy.sightRange = 6;
+      enemy.hitRate = 0.4;
+      enemy.xOffset = 4;
+      enemy.yOffset = 3.5;
+      enemy.numTurns = 3;
       enemy.coolsDown = false;
+      enemy.ghost = true;
+      enemy.spotsPlayerText = "You're time has come.";
+      enemy.lostPlayerText = "Player has skirted death.";
+      enemy.attackText = "Has shortened your life..";
+      break;
+
+      case "BASILISK":
+      enemy.type = "BASILISK"
+      enemy.hp = 25;
+      enemy.big = true;
+      enemy.damage = 6;
+      enemy.sightRange = 6;
+      enemy.hitRate = 0.7;
+      enemy.xOffset = 2;
+      enemy.yOffset = 3.5;
+      enemy.numTurns = 1;
+      enemy.coolsDown = false;
+      enemy.spotsPlayerText = "Has caught your scent.";
+      enemy.attackText = "Has bit you.";
+      break;
+
+      case "DRAGON":
+      enemy.type = "DRAGON"
+      enemy.hp = 30;
+      enemy.big = true;
+      enemy.damage = 10;
+      enemy.sightRange = 10;
+      enemy.hitRate = 0.7;
+      enemy.xOffset = 6;
+      enemy.yOffset = 3.5;
+      enemy.numTurns = 1;
+      enemy.coolsDown = true;
+      enemy.spotsPlayerText = "Is hunting you down.";
+      enemy.attackText = "Has scorched you with fire.";
+      break;
+
+      case "GIANTSKELETON":
+      enemy.type = "GIANTSKELETON"
+      enemy.hp = 15;
+      enemy.big = true;
+      enemy.damage = 6;
+      enemy.sightRange = 6;
+      enemy.hitRate = 0.6;
+      enemy.xOffset = 1;
+      enemy.yOffset = 4;
+      enemy.numTurns = 1;
+      enemy.coolsDown = true;
       break;
 
       case "BAT":
@@ -347,6 +425,17 @@ function createRandomEnemy(x,y) {
       enemy.hitRate = 0.5;
       enemy.xOffset = 3;
       enemy.yOffset = 6;
+      enemy.numTurns = 2;
+      break;
+
+      case "DRAGONLING":
+      enemy.type = "DRAGONLING"
+      enemy.hp = 7;
+      enemy.damage = 3;
+      enemy.sightRange = 7;
+      enemy.hitRate = 0.7;
+      enemy.xOffset = 0;
+      enemy.yOffset = 7;
       enemy.numTurns = 2;
       break;
 
@@ -362,6 +451,7 @@ function createRandomEnemy(x,y) {
       enemy.lostPlayerText = "The haunting has ceased.";
       enemy.attackText = "has frightened the player!";
       enemy.numTurns = 2;
+      enemy.ghost= true;
       break;
 
       case "WRAITH":
@@ -376,6 +466,7 @@ function createRandomEnemy(x,y) {
       enemy.lostPlayerText = "The haunting has ceased.";
       enemy.attackText = "is sucking the player's soul!";
       enemy.numTurns = 3;
+      enemy.ghost = true;
       break;
     }
 
@@ -854,7 +945,7 @@ function Game() {
                   if (enemy.big == false) {
                     if (map[newEnemyY] != undefined) {
                         if (map[newEnemyY][newEnemyX] != undefined) {
-                            if (map[newEnemyY][newEnemyX] == 0 || enemy.type == "GHOST" || enemy.type == "WRAITH") {
+                            if (map[newEnemyY][newEnemyX] == 0 || enemy.ghost == true) {
                                 //check if player
                                 if (this.player.x == newEnemyX && this.player.y == newEnemyY) {
                                     var hitChance = Math.random();
@@ -878,7 +969,7 @@ function Game() {
                   } else {
                     if (map[newEnemyY] != undefined && map[newEnemyY+1] != undefined) {
                       if (map[newEnemyY][newEnemyX] != undefined && map[newEnemyY+1][newEnemyX] != undefined && map[newEnemyY][newEnemyX+1] != undefined && map[newEnemyY+1][newEnemyX+1] != undefined) {
-                        if (map[newEnemyY][newEnemyX] == 0 && map[newEnemyY+1][newEnemyX] == 0 && map[newEnemyY][newEnemyX+1] == 0 && map[newEnemyY+1][newEnemyX+1] == 0) {
+                        if (map[newEnemyY][newEnemyX] == 0 && map[newEnemyY+1][newEnemyX] == 0 && map[newEnemyY][newEnemyX+1] == 0 && map[newEnemyY+1][newEnemyX+1] == 0 || enemy.ghost == true) {
                           //check if player
                           if ((this.player.x == newEnemyX && this.player.y == newEnemyY) || (this.player.x == newEnemyX+1 && this.player.y == newEnemyY) || (this.player.x == newEnemyX+1 && this.player.y == newEnemyY+1) || (this.player.x == newEnemyX && this.player.y == newEnemyY+1) ) {
                               var hitChance = Math.random();
