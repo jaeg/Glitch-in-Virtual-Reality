@@ -5,101 +5,159 @@ var spriteTileSize = 8;
 
 //MAPS
 var tileSize = 32;
-var mapArray = [
-    [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
-    [3, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
-    [3, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
-    [3, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
-    [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
-    [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
-    [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
-    [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
-    [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
-    [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
-    [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
-    [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
-    [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
-    [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
-    [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
-    [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3],
-    [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3]
-
-];
+var map = [];
 
 var screenOffset = {
     x: 0,
     y: 0
 };
 
-function generateMap(width, height) {
+
+var rooms = [];
+//Based on http://bigbadwofl.me/random-dungeon-generator/
+function generateMap(map_size) {
     //Initialize the array
-    mapArray = [];
-    for (var y = 0; y < height; y++) {
-        mapArray[y] = [];
-        for (var x = 0; x < width; x++) {
-            mapArray[y][x] = 3; //We are digging out the rooms
+    map = [];
+    for (var y = 0; y < map_size; y++) {
+        map[y] = [];
+        for (var x = 0; x < map_size; x++) {
+            map[y][x] = 3;
         }
     }
 
-    for (var i = 0; i < 100; i++) {
-        var minimumWidth = 4;
-        var minimumHeight = 4;
-        var roomWidth = 1;
-        var roomHeight = 1;
-        var roomX = 1;
-        var roomY = 1;
-        var tries = 0;
-        do {
-            if (roomIntersects(roomX, roomY, roomWidth, roomHeight)) {
-                tries++;
-            }
+    //Generate Rooms
+    var room_count = GetRandom(15, 31);
+    var min_size = 5;
+    var max_size = 15;
 
-            if (tries > 100) {
-                break;
-            }
-            roomWidth = Math.ceil(Math.random() * 10) + minimumWidth;
-            roomHeight = Math.ceil(Math.random() * 10) + minimumHeight;
-            roomX = Math.floor(Math.random() * width);
-            roomY = Math.floor(Math.random() * height);
-        } while (roomX + roomWidth > width || roomY + roomHeight > height || roomIntersects(roomX, roomY, roomWidth, roomHeight))
+    for (var i = 0; i < room_count; i++) {
+      var room = {connectedTo:[]};
 
-        carveRoom(roomX, roomY, roomWidth, roomHeight);
+      room.x = GetRandom(1, map_size - max_size - 1);
+      room.y = GetRandom(1, map_size - max_size - 1);
+      room.w = GetRandom(min_size, max_size);
+      room.h = GetRandom(min_size, max_size);
+
+      if (DoesCollide(room)) {
+          i--;
+          continue;
+      }
+      room.w--;
+      room.h--;
+
+      rooms.push(room);
+    }
+    //Squash rooms
+    for (var i = 0; i < 10; i++) {
+        for (var j = 0; j < rooms.length; j++) {
+            var room = rooms[j];
+            while (true) {
+                var old_position = {
+                    x: room.x,
+                    y: room.y
+                };
+                if (room.x > 1) room.x--;
+                if (room.y > 1) room.y--;
+                if ((room.x == 1) && (room.y == 1)) break;
+                if (this.DoesCollide(room, j)) {
+                    room.x = old_position.x;
+                    room.y = old_position.y;
+                    break;
+                }
+            }
+        }
     }
 
+    //Create corridors
+    for (i = 0; i < room_count; i++) {
+        var roomA = rooms[i];
+        var roomB = FindClosestRoom(roomA);
 
+        roomA.connectedTo.push(roomB);
+        roomB.connectedTo.push(roomA);
 
+        pointA = {
+            x: GetRandom(roomA.x, roomA.x + roomA.w),
+            y: GetRandom(roomA.y, roomA.y + roomA.h)
+        };
+        pointB = {
+            x: GetRandom(roomB.x, roomB.x + roomB.w),
+            y: GetRandom(roomB.y, roomB.y + roomB.h)
+        };
+        while ((pointB.x != pointA.x) || (pointB.y != pointA.y)) {
+            if (pointB.x != pointA.x) {
+                if (pointB.x > pointA.x) pointB.x--;
+                else pointB.x++;
+            }
+            else if (pointB.y != pointA.y) {
+                if (pointB.y > pointA.y) pointB.y--;
+                else pointB.y++;
+            }
+
+            map[pointB.y][pointB.x] = 0;
+        }
+    }
+    //Translate rooms to map
+    for (i = 0; i < room_count; i++) {
+        var room = rooms[i];
+        for (var x = room.x; x < room.x + room.w; x++) {
+            for (var y = room.y; y < room.y + room.h; y++) {
+                map[y][x] = 0;
+            }
+        }
+    }
+
+    //Create Walls
+    for (var x = 0; x < map_size; x++) {
+        for (var y = 0; y < map_size; y++) {
+            if (map[y][x] == 0) {
+                for (var xx = x - 1; xx <= x + 1; xx++) {
+                    for (var yy = y - 1; yy <= y + 1; yy++) {
+                        if (map[yy][xx] == 3) map[yy][xx] = 1;
+                    }
+                }
+            }
+        }
+    }
 }
 
-function roomIntersects(x, y, width, height) {
-    if (x + width > mapArray[0].length || y + height > mapArray.length) {
-        return true;
-    }
-    for (var currentY = 0; currentY < height; currentY++) {
-        for (var currentX = 0; currentX < width; currentX++) {
-            if (mapArray[currentY + y][currentX + x] != 3) {
-                return true;
-            }
-
+function FindClosestRoom(room) {
+    var mid = {
+        x: room.x + (room.w / 2),
+        y: room.y + (room.h / 2)
+    };
+    var closest = null;
+    var closest_distance = 1000;
+    for (var i = 0; i < rooms.length; i++) {
+        var check = rooms[i];
+        if (check == room) continue;
+        if (room.connectedTo.indexOf(check) != -1) continue;
+        if (check.connectedTo.indexOf(room) != -1) continue;
+        var check_mid = {
+            x: check.x + (check.w / 2),
+            y: check.y + (check.h / 2)
+        };
+        var distance = Math.abs(mid.x - check_mid.x) + Math.abs(mid.y - check_mid.y);
+        if (distance < closest_distance) {
+            closest_distance = distance;
+            closest = check;
         }
     }
+    return closest;
+}
+
+function DoesCollide(room, ignore) {
+    for (var i = 0; i < rooms.length; i++) {
+        if (i == ignore) continue;
+        var check = rooms[i];
+        if (!((room.x + room.w < check.x) || (room.x > check.x + check.w) || (room.y + room.h < check.y) || (room.y > check.y + check.h)))
+            return true;
+    }
+
     return false;
 }
 
-function carveRoom(x, y, width, height) {
-    if (x + width > mapArray[0].length || y + height > mapArray.length) {
-        return true;
-    }
-    for (var currentY = 0; currentY < height; currentY++) {
-        for (var currentX = 0; currentX < width; currentX++) {
-            if (currentY == 0 || currentX == 0 || currentY == height - 1 || currentX == width - 1) {
-                mapArray[currentY + y][currentX + x] = 1;
-            } else {
-                mapArray[currentY + y][currentX + x] = 0;
-            }
-        }
-    }
-}
-generateMap(100, 100);
+generateMap(100);
 
 var itemTypes = ["FOOD", "POTION", "SWORD", "ARMOR"];
 var enemyTypes = ["RAT", "BAT", "ZOMBIE", "GOBLIN"];
@@ -197,9 +255,9 @@ function Player() {
 
         //This is a roguelike.  I don't need very fancy collision detection.
         //When enemies get added I may have to iterate through them to see if I touch one though.
-        if (mapArray[newPosY] != undefined) {
-            if (mapArray[newPosY][newPosX] != undefined) {
-                if (mapArray[newPosY][newPosX] == 0) {
+        if (map[newPosY] != undefined) {
+            if (map[newPosY][newPosX] != undefined) {
+                if (map[newPosY][newPosX] == 0) {
                     if (!theGame.checkForEnemyAt(newPosX, newPosY, true, this.damage)) {
                         this.x = newPosX;
                         this.y = newPosY;
@@ -290,6 +348,8 @@ function Game() {
     this.player = new Player();
     this.inventoryUp = false;
     this.inventoryCursor = 0;
+    this.stairsX = 0;
+    this.stairsY = 0;
     //Canvas
     this.gameCanvas = document.getElementById('game');
     this.gameCtx = this.gameCanvas.getContext("2d");
@@ -377,7 +437,7 @@ function Game() {
         addMessage("UNKNOWN", "You must defeat me to live.");
         this.player = new Player();
         this.populateTraps(10);
-        this.populateEnemies(40);
+        this.populateEnemies(1);
         this.populateItems(50);
         this.inventoryUp = false;
         this.inventoryCursor = 0;
@@ -385,11 +445,21 @@ function Game() {
         var y = 0;
 
         do {
-            x = Math.floor(Math.random() * mapArray[0].length)
-            y = Math.floor(Math.random() * mapArray.length)
-        } while (mapArray[y][x] != 0)
+            x = Math.floor(Math.random() * map[0].length)
+            y = Math.floor(Math.random() * map.length)
+        } while (map[y][x] != 0)
         this.player.x = x;
         this.player.y = y;
+
+        var x = 0;
+        var y = 0;
+
+        do {
+            x = Math.floor(Math.random() * map[0].length)
+            y = Math.floor(Math.random() * map.length)
+        } while (map[y][x] != 0 || (Math.abs(x-this.player.x) < map.length/4 && Math.abs(y-this.player.y) < map.length/4))
+        this.stairsX = x;
+        this.stairsY = y;
     }
 
     this.update = function() {
@@ -403,6 +473,15 @@ function Game() {
             screenOffset.y -= this.gameCanvas.height;
         if (this.player.y * tileSize + screenOffset.y < 0)
             screenOffset.y += this.gameCanvas.height;
+
+        //Check for win
+        if (this.player.x == this.stairsX  && this.player.y == this.stairsY) {
+          this.state = "win";
+        }
+
+        if (this.player.hp < 1) {
+          this.state = "lose"
+        }
     }
 
     this.draw = function() {
@@ -418,12 +497,18 @@ function Game() {
         }
 
         if (this.state == "play") {
-            for (var y = 0; y < mapArray.length; y++) {
-                for (var x = 0; x < mapArray[y].length; x++) {
-                    var tile = mapArray[y][x];
+            for (var y = 0; y < map.length; y++) {
+                for (var x = 0; x < map[y].length; x++) {
+                    var tile = map[y][x];
 
                     if (tile == 1) {
                         this.drawSprite(tilesImage, 2, 0, spriteTileSize, tileSize, x, y);
+
+                    }
+
+                    if (tile == 3) {
+                        this.gameCtx.fillStyle="grey";
+                        this.gameCtx.fillRect(x * tileSize + screenOffset.x, y * tileSize + screenOffset.y, tileSize, tileSize);
                     }
                 }
             }
@@ -496,10 +581,24 @@ function Game() {
                 }
             }
 
-            this.gameCtx.fillRect(this.player.x * tileSize + screenOffset.x, this.player.y * tileSize + screenOffset.y, tileSize, tileSize);
+            this.drawSprite(tilesImage, 5, 5, spriteTileSize, tileSize, this.player.x, this.player.y);
 
-            this.drawSprite(tilesImage, 5, 5, spriteTileSize, tileSize, this.player.x, this.player.y)
+            this.drawSprite(tilesImage, 5, 0, spriteTileSize, tileSize, this.stairsX, this.stairsY);
 
+            //Mini map
+            this.gameCtx.fillStyle="white";
+            this.gameCtx.fillRect(this.player.x*4, this.player.y*4 , 4, 4);
+            for (var y = 0; y < map.length; y++) {
+                for (var x = 0; x < map[y].length; x++) {
+                    var tile = map[y][x];
+
+                    if (tile == 1) {
+                        this.gameCtx.fillStyle="red";
+                        this.gameCtx.fillRect(x*4 , y*4 , 4, 4);
+
+                    }
+                }
+            }
             //draw inventory
             if (this.inventoryUp) {
                 var inventoryX = this.gameCanvas.width / 4;
@@ -536,9 +635,9 @@ function Game() {
             var x = 0;
             var y = 0
             do {
-                x = Math.floor(Math.random() * mapArray[0].length)
-                y = Math.floor(Math.random() * mapArray.length)
-            } while (mapArray[y][x] != 0)
+                x = Math.floor(Math.random() * map[0].length)
+                y = Math.floor(Math.random() * map.length)
+            } while (map[y][x] != 0)
             this.items.push(new Item(x, y, itemTypes[Math.floor(Math.random() * itemTypes.length)]))
         }
     }
@@ -548,9 +647,9 @@ function Game() {
             var x = 0;
             var y = 0
             do {
-                x = Math.floor(Math.random() * mapArray[0].length)
-                y = Math.floor(Math.random() * mapArray.length)
-            } while (mapArray[y][x] != 0)
+                x = Math.floor(Math.random() * map[0].length)
+                y = Math.floor(Math.random() * map.length)
+            } while (map[y][x] != 0)
             this.traps.push(new Trap(x, y))
         }
     }
@@ -560,9 +659,9 @@ function Game() {
             var x = 0;
             var y = 0
             do {
-                x = Math.floor(Math.random() * mapArray[0].length)
-                y = Math.floor(Math.random() * mapArray.length)
-            } while (mapArray[y][x] != 0)
+                x = Math.floor(Math.random() * map[0].length)
+                y = Math.floor(Math.random() * map.length)
+            } while (map[y][x] != 0)
             this.enemies.push(new Enemy(x, y))
         }
     }
@@ -600,9 +699,9 @@ function Game() {
                     newEnemyY += Math.floor(Math.random() * 3) - 1
                 }
 
-                if (mapArray[newEnemyY] != undefined) {
-                    if (mapArray[newEnemyY][newEnemyX] != undefined) {
-                        if (mapArray[newEnemyY][newEnemyX] == 0) {
+                if (map[newEnemyY] != undefined) {
+                    if (map[newEnemyY][newEnemyX] != undefined) {
+                        if (map[newEnemyY][newEnemyX] == 0) {
                             //check if player
                             if (this.player.x == newEnemyX && this.player.y == newEnemyY) {
                                 var hitChance = Math.random();
@@ -728,4 +827,8 @@ function addMessage(from, message) {
 function clearMessages() {
     var messageLog = document.getElementById("messageLog");
     messageLog.innerHTML = "<b>Message Log</b></br>";
+}
+
+function GetRandom (low, high) {
+    return~~ (Math.random() * (high - low)) + low;
 }
