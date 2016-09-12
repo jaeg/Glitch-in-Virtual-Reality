@@ -442,15 +442,16 @@ function Game() {
 
     this.update = function() {
         this.player.updateUI();
+        
         //Screen move
-        if (this.player.x * tileSize + screenOffset.x + tileSize > this.gameCanvas.width)
-            screenOffset.x -= this.gameCanvas.width;
-        if (this.player.x * tileSize + screenOffset.x < 0)
-            screenOffset.x += this.gameCanvas.width;
-        if (this.player.y * tileSize + screenOffset.y + tileSize > this.gameCanvas.height)
-            screenOffset.y -= this.gameCanvas.height;
-        if (this.player.y * tileSize + screenOffset.y < 0)
-            screenOffset.y += this.gameCanvas.height;
+        if (this.player.x * tileSize + screenOffset.x + tileSize > this.gameCanvas.width/2)
+            screenOffset.x -= tileSize;
+        if (this.player.x * tileSize + screenOffset.x < this.gameCanvas.width/2)
+            screenOffset.x += tileSize;
+        if (this.player.y * tileSize + screenOffset.y + tileSize > this.gameCanvas.height/2)
+            screenOffset.y -= tileSize;
+        if (this.player.y * tileSize + screenOffset.y < this.gameCanvas.height/2)
+            screenOffset.y += tileSize;
 
         //Check for win
         if (this.player.x == this.stairsX  && this.player.y == this.stairsY) {
