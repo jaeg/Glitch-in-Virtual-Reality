@@ -129,7 +129,7 @@ function roomIntersects(x, y, width, height) {
 generateMap(100);
 
 var itemTypes = ["FOOD", "POTION", "SWORD", "ARMOR"];
-var enemyTypes = ["RAT", "BAT", "ZOMBIE", "GOBLIN"];
+var enemyTypes = ["RAT", "BAT","GHOST","WRAITH","ZOMBIE","OOZE"];
 var trapTypes = ["PIT", "SPIKES", "FIRE RUNES", "POISON VENTS"];
 var trapText = ["You fell down a pit.", "You were impaled by spikes.", "You set off fire runes.", "Poison blasts you in the face."];
 
@@ -257,9 +257,94 @@ function Enemy(x, y, type) {
     this.type = type || "RAT";
     this.sightRange = 5;
     this.chasing = false;
+    this.xOffset = 14;
+    this.yOffset = 6;
+    this.numTurns = 1;
     this.attackText = "has attacked the player!";
     this.spotsPlayerText = "has spotted the player!";
     this.lostPlayerText = "has lost the trail of the player..";
+}
+
+function createRandomEnemy(x,y) {
+  var enemy = new Enemy(x,y);
+  enemyType = enemyTypes[GetRandom(0,enemyTypes.length)];
+
+    switch (enemyType) {
+      case "RAT":
+      enemy.type = "RAT"
+      enemy.hp = 10;
+      enemy.damage = 1;
+      enemy.sightRange = 5;
+      enemy.hitRate = 0.7;
+      enemy.xOffset = 14;
+      enemy.yOffset = 6;
+      enemy.numTurns = 1;
+      break;
+
+      case "ZOMBIE":
+      enemy.type = "ZOMBIE"
+      enemy.hp = 10;
+      enemy.damage = 2;
+      enemy.sightRange = 4;
+      enemy.hitRate = 0.7;
+      enemy.xOffset = 1;
+      enemy.yOffset = 6;
+      enemy.numTurns = 1;
+      enemy.spotsPlayerText = "has started shambling towards the player.";
+      break;
+
+      case "OOZE":
+      enemy.type = "OOZE"
+      enemy.hp = 10;
+      enemy.damage = 4;
+      enemy.sightRange = 5;
+      enemy.hitRate = 0.5;
+      enemy.xOffset = 6;
+      enemy.yOffset = 6;
+      enemy.numTurns = 1;
+      break;
+
+      case "BAT":
+      enemy.type = "BAT"
+      enemy.hp = 5;
+      enemy.damage = 2;
+      enemy.sightRange = 10;
+      enemy.hitRate = 0.5;
+      enemy.xOffset = 3;
+      enemy.yOffset = 6;
+      enemy.numTurns = 2;
+      break;
+
+      case "GHOST":
+      enemy.type = "GHOST"
+      enemy.hp = 5;
+      enemy.damage = 2;
+      enemy.sightRange = 7;
+      enemy.hitRate = 0.5;
+      enemy.xOffset = 2;
+      enemy.yOffset = 7;
+      enemy.spotsPlayerText = "You are being haunted";
+      enemy.lostPlayerText = "The haunting has ceased.";
+      enemy.attackText = "has frightened the player!";
+      enemy.numTurns = 2;
+      break;
+
+      case "WRAITH":
+      enemy.type = "WRAITH"
+      enemy.hp = 20;
+      enemy.damage = 3;
+      enemy.sightRange = 7;
+      enemy.hitRate = 0.5;
+      enemy.xOffset = 10;
+      enemy.yOffset = 6;
+      enemy.spotsPlayerText = "You feel intense dread.";
+      enemy.lostPlayerText = "The haunting has ceased.";
+      enemy.attackText = "is sucking the player's soul!";
+      enemy.numTurns = 3;
+      break;
+    }
+
+    return enemy;
 }
 
 function Trap(x, y, type) {
@@ -568,16 +653,8 @@ function Game() {
                 var xOffset = 0;
                 var yOffset = 0;
 
-                switch (enemy.type) {
-                    case "RAT":
-                        xOffset = 14;
-                        yOffset = 6;
-
-                        break;
-                }
-
                 if (enemy.dead == false) {
-                    this.drawSprite(tilesImage, xOffset, yOffset, spriteTileSize, tileSize, enemy.x, enemy.y)
+                    this.drawSprite(tilesImage, enemy.xOffset, enemy.yOffset, spriteTileSize, tileSize, enemy.x, enemy.y)
                 } else {
                     this.drawSprite(tilesImage, 10, 1, spriteTileSize, tileSize, enemy.x, enemy.y)
                 }
@@ -683,7 +760,7 @@ function Game() {
                 x = Math.floor(Math.random() * map[0].length)
                 y = Math.floor(Math.random() * map.length)
             } while (map[y][x] != 0)
-            this.enemies.push(new Enemy(x, y))
+            this.enemies.push(new createRandomEnemy(x, y))
         }
     }
 
@@ -691,55 +768,59 @@ function Game() {
         for (var i = 0; i < this.enemies.length; i++) {
             var enemy = this.enemies[i];
             if (enemy.dead == false) {
-                var newEnemyX = enemy.x;
-                var newEnemyY = enemy.y;
-                if (Math.abs(enemy.x - this.player.x) < enemy.sightRange && Math.abs(enemy.y - this.player.y) < enemy.sightRange) {
-                    if (enemy.chasing == false) {
-                        enemy.chasing = true;
-                        addMessage(enemy.type, enemy.spotsPlayerText);
-                    }
+                var turnsTaken = 0;
+                while (turnsTaken < enemy.numTurns) {
+                  var newEnemyX = enemy.x;
+                  var newEnemyY = enemy.y;
+                  if (Math.abs(enemy.x - this.player.x) < enemy.sightRange && Math.abs(enemy.y - this.player.y) < enemy.sightRange) {
+                      if (enemy.chasing == false) {
+                          enemy.chasing = true;
+                          addMessage(enemy.type, enemy.spotsPlayerText);
+                      }
 
-                    //very primative AI
-                    if (enemy.x < this.player.x) {
-                        newEnemyX += 1;
-                    } else if (enemy.x > this.player.x) {
-                        newEnemyX -= 1;
-                    }
-                    if (enemy.y > this.player.y) {
-                        newEnemyY -= 1;
-                    } else if (enemy.y < this.player.y) {
-                        newEnemyY += 1;
-                    }
-                } else {
-                    if (enemy.chasing == true) {
-                        enemy.chasing = false;
-                        addMessage(enemy.type, enemy.lostPlayerText);
-                    }
+                      //very primative AI
+                      if (enemy.x < this.player.x) {
+                          newEnemyX += 1;
+                      } else if (enemy.x > this.player.x) {
+                          newEnemyX -= 1;
+                      }
+                      if (enemy.y > this.player.y) {
+                          newEnemyY -= 1;
+                      } else if (enemy.y < this.player.y) {
+                          newEnemyY += 1;
+                      }
+                  } else {
+                      if (enemy.chasing == true) {
+                          enemy.chasing = false;
+                          addMessage(enemy.type, enemy.lostPlayerText);
+                      }
 
-                    newEnemyX += Math.floor(Math.random() * 3) - 1
-                    newEnemyY += Math.floor(Math.random() * 3) - 1
-                }
+                      newEnemyX += Math.floor(Math.random() * 3) - 1
+                      newEnemyY += Math.floor(Math.random() * 3) - 1
+                  }
 
-                if (map[newEnemyY] != undefined) {
-                    if (map[newEnemyY][newEnemyX] != undefined) {
-                        if (map[newEnemyY][newEnemyX] == 0) {
-                            //check if player
-                            if (this.player.x == newEnemyX && this.player.y == newEnemyY) {
-                                var hitChance = Math.random();
-                                if (hitChance < enemy.hitRate) {
-                                    addMessage(enemy.type, enemy.attackText);
-                                    this.player.takeDamage(enemy.damage)
-                                } else {
-                                    addMessage(enemy.type, "Attack missed the player!");
-                                }
+                  if (map[newEnemyY] != undefined) {
+                      if (map[newEnemyY][newEnemyX] != undefined) {
+                          if (map[newEnemyY][newEnemyX] == 0 || enemy.type == "GHOST" || enemy.type == "WRAITH") {
+                              //check if player
+                              if (this.player.x == newEnemyX && this.player.y == newEnemyY) {
+                                  var hitChance = Math.random();
+                                  if (hitChance < enemy.hitRate) {
+                                      addMessage(enemy.type, enemy.attackText);
+                                      this.player.takeDamage(enemy.damage)
+                                  } else {
+                                      addMessage(enemy.type, "Attack missed the player!");
+                                  }
 
-                            } else if (!this.checkForEnemyAt(newEnemyX, newEnemyY, false)) {
-                                enemy.x = newEnemyX;
-                                enemy.y = newEnemyY;
-                            }
+                              } else if (!this.checkForEnemyAt(newEnemyX, newEnemyY, false)) {
+                                  enemy.x = newEnemyX;
+                                  enemy.y = newEnemyY;
+                              }
 
-                        }
-                    }
+                          }
+                      }
+                  }
+                  turnsTaken++;
                 }
             }
         }
