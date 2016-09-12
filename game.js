@@ -442,7 +442,7 @@ function Game() {
 
     this.update = function() {
         this.player.updateUI();
-        
+
         //Screen move
         if (this.player.x * tileSize + screenOffset.x + tileSize > this.gameCanvas.width/2)
             screenOffset.x -= tileSize;
@@ -633,7 +633,12 @@ function Game() {
                         this.gameCtx.fillStyle = "blue";
                     }
                     this.gameCtx.font = "20px Courier New";
-                    this.gameCtx.fillText(this.player.inventory[i].type, inventoryX + tileSize, inventoryY + 20 + i * tileSize);
+                    if (this.player.inventory[i].type == "SWORD" || this.player.inventory[i].type == "ARMOR") {
+                      this.gameCtx.fillText("+"+this.player.inventory[i].buff+ " " + this.player.inventory[i].type, inventoryX + tileSize, inventoryY + 20 + i * tileSize);
+                    } else {
+                      this.gameCtx.fillText(this.player.inventory[i].type, inventoryX + tileSize, inventoryY + 20 + i * tileSize);
+                    }
+
                 }
             }
         }
