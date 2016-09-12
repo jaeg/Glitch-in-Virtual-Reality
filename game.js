@@ -129,7 +129,7 @@ function roomIntersects(x, y, width, height) {
 generateMap(100);
 
 var itemTypes = ["FOOD", "POTION", "SWORD", "ARMOR"];
-var enemyTypes = ["RAT", "BAT","GHOST","WRAITH","ZOMBIE","OOZE"];
+var enemyTypes = ["RAT", "BAT","GHOST","WRAITH","ZOMBIE","OOZE","BIGOOZE"];
 var trapTypes = ["PIT", "SPIKES", "FIRE RUNES", "POISON VENTS"];
 var trapText = ["You fell down a pit.", "You were impaled by spikes.", "You set off fire runes.", "Poison blasts you in the face."];
 
@@ -260,6 +260,9 @@ function Enemy(x, y, type) {
     this.xOffset = 14;
     this.yOffset = 6;
     this.numTurns = 1;
+    this.coolsDown = false;
+    this.coolingDown = false;
+    this.big = false;
     this.attackText = "has attacked the player!";
     this.spotsPlayerText = "has spotted the player!";
     this.lostPlayerText = "has lost the trail of the player..";
@@ -268,7 +271,7 @@ function Enemy(x, y, type) {
 function createRandomEnemy(x,y) {
   var enemy = new Enemy(x,y);
   enemyType = enemyTypes[GetRandom(0,enemyTypes.length)];
-
+  enemyType = "BIGOOZE";
     switch (enemyType) {
       case "RAT":
       enemy.type = "RAT"
@@ -279,6 +282,7 @@ function createRandomEnemy(x,y) {
       enemy.xOffset = 14;
       enemy.yOffset = 6;
       enemy.numTurns = 1;
+      enemy.coolsDown = true;
       break;
 
       case "ZOMBIE":
@@ -291,6 +295,7 @@ function createRandomEnemy(x,y) {
       enemy.yOffset = 6;
       enemy.numTurns = 1;
       enemy.spotsPlayerText = "has started shambling towards the player.";
+      enemy.coolsDown = true;
       break;
 
       case "OOZE":
@@ -302,6 +307,20 @@ function createRandomEnemy(x,y) {
       enemy.xOffset = 6;
       enemy.yOffset = 6;
       enemy.numTurns = 1;
+      enemy.coolsDown = true;
+      break;
+
+      case "BIGOOZE":
+      enemy.type = "BIGOOZE"
+      enemy.hp = 10;
+      enemy.big = true;
+      enemy.damage = 4;
+      enemy.sightRange = 5;
+      enemy.hitRate = 0.5;
+      enemy.xOffset = 0;
+      enemy.yOffset = 5;
+      enemy.numTurns = 1;
+      enemy.coolsDown = true;
       break;
 
       case "BAT":
@@ -656,11 +675,20 @@ function Game() {
                 var xOffset = 0;
                 var yOffset = 0;
 
-                if (enemy.dead == false) {
-                    this.drawSprite(tilesImage, enemy.xOffset, enemy.yOffset, spriteTileSize, tileSize, enemy.x, enemy.y)
+                if (enemy.big == false) {
+                  if (enemy.dead == false) {
+                      this.drawSprite(tilesImage, enemy.xOffset, enemy.yOffset, spriteTileSize, tileSize, enemy.x, enemy.y)
+                  } else {
+                      this.drawSprite(tilesImage, 10, 1, spriteTileSize, tileSize, enemy.x, enemy.y)
+                  }
                 } else {
-                    this.drawSprite(tilesImage, 10, 1, spriteTileSize, tileSize, enemy.x, enemy.y)
+                  if (enemy.dead == false) {
+                      this.drawSprite(tilesImage, enemy.xOffset, enemy.yOffset, spriteTileSize*2, tileSize, enemy.x, enemy.y,2)
+                  } else {
+                      this.drawSprite(tilesImage, 10, 1, spriteTileSize, tileSize*2, enemy.x, enemy.y,2)
+                  }
                 }
+
             }
 
             this.drawSprite(tilesImage, 5, 5, spriteTileSize, tileSize, this.player.x, this.player.y);
@@ -728,8 +756,9 @@ function Game() {
 
     }
 
-    this.drawSprite = function(img, xOffset, yOffset, spriteSize, tileSize, x, y) {
-        this.gameCtx.drawImage(img, xOffset * spriteSize, yOffset * spriteSize, spriteSize, spriteSize, x * tileSize + screenOffset.x, y * tileSize + screenOffset.y, tileSize, tileSize);
+    this.drawSprite = function(img, xOffset, yOffset, spriteSize, tileSize, x, y,scale) {
+        scale = scale || 1;
+        this.gameCtx.drawImage(img, xOffset * spriteSize, yOffset * spriteSize, spriteSize, spriteSize, x * tileSize + screenOffset.x, y * tileSize + screenOffset.y, tileSize*scale, tileSize*scale);
     }
     this.populateItems = function(count) {
         for (var i = 0; i < count; i++) {
@@ -772,6 +801,10 @@ function Game() {
             var enemy = this.enemies[i];
             if (enemy.dead == false) {
                 var turnsTaken = 0;
+                if (enemy.coolingDown == true) {
+                  enemy.coolingDown = false;
+                  continue;
+                }
                 while (turnsTaken < enemy.numTurns) {
                   var newEnemyX = enemy.x;
                   var newEnemyY = enemy.y;
@@ -802,31 +835,60 @@ function Game() {
                       newEnemyY += Math.floor(Math.random() * 3) - 1
                   }
 
-                  if (map[newEnemyY] != undefined) {
-                      if (map[newEnemyY][newEnemyX] != undefined) {
-                          if (map[newEnemyY][newEnemyX] == 0 || enemy.type == "GHOST" || enemy.type == "WRAITH") {
-                              //check if player
-                              if (this.player.x == newEnemyX && this.player.y == newEnemyY) {
-                                  var hitChance = Math.random();
-                                  if (hitChance < enemy.hitRate) {
-                                      addMessage(enemy.type, enemy.attackText);
-                                      this.player.takeDamage(enemy.damage)
-                                  } else {
-                                      addMessage(enemy.type, "Attack missed the player!");
-                                  }
+                  if (enemy.big == false) {
+                    if (map[newEnemyY] != undefined) {
+                        if (map[newEnemyY][newEnemyX] != undefined) {
+                            if (map[newEnemyY][newEnemyX] == 0 || enemy.type == "GHOST" || enemy.type == "WRAITH") {
+                                //check if player
+                                if (this.player.x == newEnemyX && this.player.y == newEnemyY) {
+                                    var hitChance = Math.random();
+                                    if (hitChance < enemy.hitRate) {
+                                        addMessage(enemy.type, enemy.attackText);
+                                        this.player.takeDamage(enemy.damage)
+                                    } else {
+                                        addMessage(enemy.type, "Attack missed the player!");
+                                    }
 
-                              } else if (!this.checkForEnemyAt(newEnemyX, newEnemyY, false)) {
-                                  enemy.x = newEnemyX;
-                                  enemy.y = newEnemyY;
+                                } else if (!this.checkForEnemyAt(newEnemyX, newEnemyY, false)) {
+                                    enemy.x = newEnemyX;
+                                    enemy.y = newEnemyY;
+                                }
+                                if (enemy.coolsDown == true) {
+                                  enemy.coolingDown = true;
+                                }
+                            }
+                        }
+                    }
+                  } else {
+                    if (map[newEnemyY] != undefined && map[newEnemyY+1] != undefined) {
+                      if (map[newEnemyY][newEnemyX] != undefined && map[newEnemyY+1][newEnemyX] != undefined && map[newEnemyY][newEnemyX+1] != undefined && map[newEnemyY+1][newEnemyX+1] != undefined) {
+                        if (map[newEnemyY][newEnemyX] == 0 && map[newEnemyY+1][newEnemyX] == 0 && map[newEnemyY][newEnemyX+1] == 0 && map[newEnemyY+1][newEnemyX+1] == 0) {
+                          //check if player
+                          if ((this.player.x == newEnemyX && this.player.y == newEnemyY) || (this.player.x == newEnemyX+1 && this.player.y == newEnemyY) || (this.player.x == newEnemyX+1 && this.player.y == newEnemyY+1) || (this.player.x == newEnemyX && this.player.y == newEnemyY+1) ) {
+                              var hitChance = Math.random();
+                              if (hitChance < enemy.hitRate) {
+                                  addMessage(enemy.type, enemy.attackText);
+                                  this.player.takeDamage(enemy.damage)
+                              } else {
+                                  addMessage(enemy.type, "Attack missed the player!");
                               }
 
+                          } else if (true) {
+                              enemy.x = newEnemyX;
+                              enemy.y = newEnemyY;
                           }
+
+                          if (enemy.coolsDown == true) {
+                            enemy.coolingDown = true;
+                          }
+                        }
                       }
                   }
-                  turnsTaken++;
                 }
+                turnsTaken++;
             }
         }
+      }
     }
 
     this.checkForItems = function() {
@@ -873,8 +935,7 @@ function Game() {
     this.checkForEnemyAt = function(x, y, attack, damage) {
         for (var i = 0; i < this.enemies.length; i++) {
             var enemy = this.enemies[i];
-
-            if (enemy.x == x && enemy.y == y && enemy.dead == false) {
+            if (((enemy.big == false && enemy.x == x && enemy.y == y) || (enemy.big == true && ((x == enemy.x && y == enemy.y) || (x == enemy.x+1 && y == enemy.y) || (x == enemy.x+1 && y == enemy.y+1) || (x == enemy.x && y == enemy.y+1)))) && enemy.dead == false) {
                 if (attack) {
                     var hitChance = Math.random();
                     if (hitChance < this.player.hitRate) {
