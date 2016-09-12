@@ -18,7 +18,7 @@ function generateMap(map_size) {
     for (var y = 0; y < map_size; y++) {
         map[y] = [];
         for (var x = 0; x < map_size; x++) {
-            map[y][x] = 3;
+            map[y][x] = -1;
         }
     }
 
@@ -40,7 +40,7 @@ function generateMap(map_size) {
                     var roomHeight = GetRandom(10, 20);
                     //find out which direction to build the roomWidth
                     //up
-                    if (map[y - 1][x] == 3) {
+                    if (map[y - 1][x] == -1) {
                         if (map[y][x + 1] == 1 && map[y][x - 1] == 1 && map[y + 1][x] != 1) {
                             if (!roomIntersects(x - roomWidth / 2, y - roomHeight + 1, roomWidth, roomHeight)) {
                                 createRoom(x - roomWidth / 2, y - roomHeight + 1, roomWidth, roomHeight);
@@ -51,7 +51,7 @@ function generateMap(map_size) {
                     }
 
                     //down
-                    if (map[y + 1][x] == 3) {
+                    if (map[y + 1][x] == -1) {
 
                         if (map[y][x + 1] == 1 && map[y][x - 1] == 1 && map[y - 1][x] != 1) {
                             if (!roomIntersects(x - roomWidth / 2, y, roomWidth, roomHeight)) {
@@ -60,11 +60,10 @@ function generateMap(map_size) {
                                 done = true;
                             }
                         }
-
                     }
 
                     //left
-                    if (map[y][x - 1] == 3) {
+                    if (map[y][x - 1] == -1) {
                         if (map[y + 1][x] == 1 && map[y - 1][x] == 1 && map[y][x - 1] != 1) {
                             if (!roomIntersects(x - roomWidth + 1, y - roomHeight / 2, roomWidth, roomHeight)) {
                                 createRoom(x - roomWidth + 1, y - roomHeight / 2, roomWidth, roomHeight);
@@ -75,7 +74,7 @@ function generateMap(map_size) {
                     }
 
                     //right
-                    if (map[y][x + 1] == 3) {
+                    if (map[y][x + 1] == -1) {
                         if (map[y + 1][x] == 1 && map[y - 1][x] == 1 && map[y][x + 1] != 1) {
                             if (!roomIntersects(x, y - roomHeight / 2, roomWidth, roomHeight)) {
                                 createRoom(x, y - roomHeight / 2, roomWidth, roomHeight);
@@ -484,7 +483,7 @@ function Game() {
                       this.drawSprite(tilesImage, 11, 1, spriteTileSize, tileSize, x, y);
                     }
 
-                    if (tile == 3) {
+                    if (tile == -1) {
                         this.gameCtx.fillStyle="grey";
                         this.gameCtx.fillRect(x * tileSize + screenOffset.x, y * tileSize + screenOffset.y, tileSize, tileSize);
                     }
@@ -582,9 +581,20 @@ function Game() {
                 var inventoryX = this.gameCanvas.width / 4;
                 var inventoryY = this.gameCanvas.height / 4;
                 var inventoryWidth = this.gameCanvas.width / 2;
-                var inventoryHeight = this.gameCanvas.height / 2
+                var inventoryHeight = this.gameCanvas.height / 1.5;
+
+                this.gameCtx.fillStyle = "white";
+                this.gameCtx.font = "30px Courier New";
+                this.gameCtx.fillText("Inventory",inventoryX+80, inventoryY-20, inventoryWidth, 20);
+
                 this.gameCtx.fillStyle = "black";
                 this.gameCtx.fillRect(inventoryX, inventoryY, inventoryWidth, inventoryHeight);
+
+                this.gameCtx.beginPath();
+                this.gameCtx.lineWidth="6";
+                this.gameCtx.strokeStyle="white";
+                this.gameCtx.rect(inventoryX-3, inventoryY-3, inventoryWidth+6, inventoryHeight+6);
+                this.gameCtx.stroke();
 
                 this.gameCtx.fillStyle = "white";
                 this.gameCtx.fillRect(inventoryX, inventoryY + this.inventoryCursor * tileSize, tileSize, tileSize);
@@ -706,7 +716,7 @@ function Game() {
         for (var i = 0; i < this.items.length; i++) {
             var item = this.items[i];
 
-            if (item.x == this.player.x && item.y == this.player.y) {
+            if (item.x == this.player.x && item.y == this.player.y && this.player.inventory.length < 10) {
                 this.player.inventory.push(item);
                 //remove item
                 addMessage("PLAYER", "Picked up " + item.type)
