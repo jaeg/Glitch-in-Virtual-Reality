@@ -845,7 +845,7 @@ function Game() {
                 for (var i = 0; i < this.player.inventory.length; i++) {
                     this.gameCtx.fillStyle = "white";
                     if (this.player.inventory[i].equipped == true) {
-                        this.gameCtx.fillStyle = "blue";
+                        this.gameCtx.fillStyle = "grey";
                     }
                     this.gameCtx.font = "20px Courier New";
                     if (this.player.inventory[i].type == "SWORD" || this.player.inventory[i].type == "ARMOR") {
