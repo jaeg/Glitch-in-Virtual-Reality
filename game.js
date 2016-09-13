@@ -458,14 +458,15 @@ function createRandomEnemy(x,y) {
       enemy.spotsPlayerText = "You are being haunted";
       enemy.lostPlayerText = "The haunting has ceased.";
       enemy.attackText = "has frightened the player!";
-      enemy.numTurns = 2;
+      enemy.numTurns = 1;
       enemy.ghost= true;
+      enemy.coolsDown = true;
       break;
 
       case "WRAITH":
       enemy.type = "WRAITH"
       enemy.hp = 6;
-      enemy.damage = 3;
+      enemy.damage = 2;
       enemy.sightRange = 6;
       enemy.hitRate = 0.3;
       enemy.xOffset = 10;
@@ -473,7 +474,7 @@ function createRandomEnemy(x,y) {
       enemy.spotsPlayerText = "You feel intense dread.";
       enemy.lostPlayerText = "The haunting has ceased.";
       enemy.attackText = "is sucking the player's soul!";
-      enemy.numTurns = 3;
+      enemy.numTurns = 2;
       enemy.ghost = true;
       break;
     }
