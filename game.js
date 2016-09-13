@@ -215,6 +215,9 @@ function Player() {
 
         var hitrateSpan = document.getElementById('hitrate');
         hitrateSpan.innerHTML = this.hitRate;
+        if (hitrateSpan.innerHTML.length > 5) {
+          hitrateSpan.innerHTML = hitrateSpan.innerHTML.substring(0, 4)
+        }
 
     };
     this.move = function(dirX, dirY, avoidCollisions) {
@@ -276,14 +279,19 @@ function Enemy(x, y, type) {
 
 function createRandomEnemy(x,y) {
   var enemy = new Enemy(x,y);
-  enemyType = enemyTypes[GetRandom(0,enemyTypes.length)];
+  var max = 7;
+  if (Math.abs(x-theGame.stairsX) < 20 && Math.abs(y-theGame.stairsY) < 20) {
+    max = enemyTypes.length;
+  }
+  var enemyType = enemyTypes[GetRandom(0,max)];
+
     switch (enemyType) {
       case "RAT":
       enemy.type = "RAT"
-      enemy.hp = 10;
+      enemy.hp = 4;
       enemy.damage = 1;
       enemy.sightRange = 5;
-      enemy.hitRate = 0.7;
+      enemy.hitRate = 0.8;
       enemy.xOffset = 14;
       enemy.yOffset = 6;
       enemy.numTurns = 1;
@@ -292,7 +300,7 @@ function createRandomEnemy(x,y) {
 
       case "ZOMBIE":
       enemy.type = "ZOMBIE"
-      enemy.hp = 10;
+      enemy.hp = 4;
       enemy.damage = 2;
       enemy.sightRange = 4;
       enemy.hitRate = 0.7;
@@ -305,7 +313,7 @@ function createRandomEnemy(x,y) {
 
       case "SKELETON":
       enemy.type = "SKELETON"
-      enemy.hp = 7;
+      enemy.hp = 4;
       enemy.damage = 2;
       enemy.sightRange = 5;
       enemy.hitRate = 0.7;
@@ -318,7 +326,7 @@ function createRandomEnemy(x,y) {
 
       case "OOZE":
       enemy.type = "OOZE"
-      enemy.hp = 10;
+      enemy.hp = 4;
       enemy.damage = 4;
       enemy.sightRange = 5;
       enemy.hitRate = 0.5;
@@ -333,7 +341,7 @@ function createRandomEnemy(x,y) {
       enemy.hp = 20;
       enemy.big = true;
       enemy.damage = 4;
-      enemy.sightRange = 5;
+      enemy.sightRange = 3;
       enemy.hitRate = 0.5;
       enemy.xOffset = 0;
       enemy.yOffset = 5;
@@ -345,7 +353,7 @@ function createRandomEnemy(x,y) {
       enemy.type = "BEHOLDER"
       enemy.hp = 25;
       enemy.big = true;
-      enemy.damage = 6;
+      enemy.damage = 5;
       enemy.sightRange = 7;
       enemy.hitRate = 0.8;
       enemy.xOffset = 2;
@@ -359,14 +367,14 @@ function createRandomEnemy(x,y) {
 
       case "DEATH":
       enemy.type = "DEATH"
-      enemy.hp = 25;
+      enemy.hp = 10;
       enemy.big = true;
       enemy.damage = 6;
-      enemy.sightRange = 6;
+      enemy.sightRange = 5;
       enemy.hitRate = 0.4;
       enemy.xOffset = 4;
       enemy.yOffset = 3.5;
-      enemy.numTurns = 3;
+      enemy.numTurns = 2;
       enemy.coolsDown = false;
       enemy.ghost = true;
       enemy.spotsPlayerText = "You're time has come.";
@@ -376,7 +384,7 @@ function createRandomEnemy(x,y) {
 
       case "BASILISK":
       enemy.type = "BASILISK"
-      enemy.hp = 25;
+      enemy.hp = 10;
       enemy.big = true;
       enemy.damage = 6;
       enemy.sightRange = 6;
@@ -391,10 +399,10 @@ function createRandomEnemy(x,y) {
 
       case "DRAGON":
       enemy.type = "DRAGON"
-      enemy.hp = 30;
+      enemy.hp = 15;
       enemy.big = true;
       enemy.damage = 10;
-      enemy.sightRange = 10;
+      enemy.sightRange = 6;
       enemy.hitRate = 0.7;
       enemy.xOffset = 6;
       enemy.yOffset = 3.5;
@@ -406,7 +414,7 @@ function createRandomEnemy(x,y) {
 
       case "GIANTSKELETON":
       enemy.type = "GIANTSKELETON"
-      enemy.hp = 15;
+      enemy.hp = 8;
       enemy.big = true;
       enemy.damage = 6;
       enemy.sightRange = 6;
@@ -419,9 +427,9 @@ function createRandomEnemy(x,y) {
 
       case "BAT":
       enemy.type = "BAT"
-      enemy.hp = 5;
-      enemy.damage = 2;
-      enemy.sightRange = 10;
+      enemy.hp = 2;
+      enemy.damage = 1;
+      enemy.sightRange = 6;
       enemy.hitRate = 0.5;
       enemy.xOffset = 3;
       enemy.yOffset = 6;
@@ -430,9 +438,9 @@ function createRandomEnemy(x,y) {
 
       case "DRAGONLING":
       enemy.type = "DRAGONLING"
-      enemy.hp = 7;
-      enemy.damage = 3;
-      enemy.sightRange = 7;
+      enemy.hp = 4;
+      enemy.damage = 2;
+      enemy.sightRange = 5;
       enemy.hitRate = 0.7;
       enemy.xOffset = 0;
       enemy.yOffset = 7;
@@ -441,9 +449,9 @@ function createRandomEnemy(x,y) {
 
       case "GHOST":
       enemy.type = "GHOST"
-      enemy.hp = 5;
+      enemy.hp = 2;
       enemy.damage = 2;
-      enemy.sightRange = 7;
+      enemy.sightRange = 5;
       enemy.hitRate = 0.5;
       enemy.xOffset = 2;
       enemy.yOffset = 7;
@@ -456,9 +464,9 @@ function createRandomEnemy(x,y) {
 
       case "WRAITH":
       enemy.type = "WRAITH"
-      enemy.hp = 20;
+      enemy.hp = 6;
       enemy.damage = 3;
-      enemy.sightRange = 7;
+      enemy.sightRange = 6;
       enemy.hitRate = 0.3;
       enemy.xOffset = 10;
       enemy.yOffset = 6;
@@ -511,14 +519,14 @@ function Item(x, y, type) {
         var badEffect = Math.round(Math.random()); //50/50 good or bad
         var amount = player[effect] * multiplier;
         if (effect != "hitRate") {
-            amount = Math.round(amount);
+            amount = Math.ceil(amount);
         }
         if (badEffect) {
             player[effect] -= amount;
-            addMessage("ITEM", "The potion made you fill ill.")
+            addMessage("ITEM", "The potion made you fill ill. " + effect + " went down.")
         } else {
             player[effect] += amount;
-            addMessage("ITEM", "The potion made you fill impowered.")
+            addMessage("ITEM", "The potion made you fill impowered. " + effect + " went up.")
         }
     }
 }
@@ -633,30 +641,42 @@ function Game() {
 
         generateMap(100);
 
-        var x = 0;
-        var y = 0;
+
 
         //Place player
-        do {
-            x = Math.floor(Math.random() * map[0].length)
-            y = Math.floor(Math.random() * map.length)
-        } while (map[y][x] != 0)
-        this.player.x = x;
-        this.player.y = y;
+        //Starting from the top left.
+        for (var y = 0; y < map.length; y++) {
+          var done = false;
+          for (var x = 0; x < map[y].length; x++) {
+            if (map[y][x] == 0){
+              this.player.x = x;
+              this.player.y = y;
+              done = true;
+              break;
+            }
+          }
+          if (done) {
+            break;
+          }
+        }
 
-        var x = 0;
-        var y = 0;
-
-        //Place stairs
-        do {
-            x = Math.floor(Math.random() * map[0].length)
-            y = Math.floor(Math.random() * map.length)
-        } while (map[y][x] != 0 || (Math.abs(x-this.player.x) < map.length/4 && Math.abs(y-this.player.y) < map.length/4))
-        this.stairsX = x;
-        this.stairsY = y;
-
-        this.populateTraps(30);
-        this.populateEnemies(30);
+        //Starting from the bottom right.
+        for (var y = map.length-1; y > 0; y--) {
+          var done = false;
+          for (var x = map[y].length - 1; x > 0; x--) {
+            if (map[y][x] == 0){
+              this.stairsX = x;
+              this.stairsY = y;
+              done = true;
+              break;
+            }
+          }
+          if (done) {
+            break;
+          }
+        }
+        this.populateTraps(100);
+        this.populateEnemies(100);
         this.populateItems(15);
     }
 
@@ -680,19 +700,17 @@ function Game() {
     this.draw = function() {
         this.gameCanvas.width = this.gameCanvas.width; //clear the canvas
         this.gameCtx.imageSmoothingEnabled = false;
-        if (this.state == "menu") {
-            this.gameCtx.fillStyle = "black";
-            this.gameCtx.fillRect(0, 0, this.gameCanvas.width, this.gameCanvas.height);
 
+        this.gameCtx.fillStyle = "black";
+        this.gameCtx.fillRect(0, 0, this.gameCanvas.width, this.gameCanvas.height);
+
+        if (this.state == "menu") {
             this.gameCtx.fillStyle = "white";
             this.gameCtx.font = "20px Courier New";
             this.gameCtx.fillText("Hit Enter To Start", 240, 240);
         }
 
         if (this.state == "win") {
-            this.gameCtx.fillStyle = "black";
-            this.gameCtx.fillRect(0, 0, this.gameCanvas.width, this.gameCanvas.height);
-
             this.gameCtx.fillStyle = "white";
             this.gameCtx.font = "20px Courier New";
             this.gameCtx.fillText("You have escaped!", 240, 200);
@@ -700,9 +718,6 @@ function Game() {
         }
 
         if (this.state == "lose") {
-            this.gameCtx.fillStyle = "black";
-            this.gameCtx.fillRect(0, 0, this.gameCanvas.width, this.gameCanvas.height);
-
             this.gameCtx.fillStyle = "white";
             this.gameCtx.font = "20px Courier New";
             this.gameCtx.fillText("You have perished!", 240, 200);
@@ -721,11 +736,6 @@ function Game() {
                     if (tile == 2) {
                       this.drawSprite(tilesImage, 11, 1, spriteTileSize, tileSize, x, y);
                     }
-
-                    if (tile == -1) {
-                        this.gameCtx.fillStyle="grey";
-                        this.gameCtx.fillRect(x * tileSize + screenOffset.x, y * tileSize + screenOffset.y, tileSize, tileSize);
-                    }
                 }
             }
 
@@ -733,7 +743,10 @@ function Game() {
             for (var i = 0; i < this.traps.length; i++) {
                 var trap = this.traps[i];
                 if (trap.spotted && !trap.setOff) {
-                    this.drawSprite(tilesImage, 7, 0, spriteTileSize, tileSize, trap.x, trap.y);
+                    //this.drawSprite(tilesImage, 7, 0, spriteTileSize, tileSize, trap.x, trap.y);
+                    this.gameCtx.strokeStyle="grey"
+                    this.gameCtx.setLineDash([6]);
+                    this.gameCtx.strokeRect(trap.x * tileSize + screenOffset.x, trap.y * tileSize + screenOffset.y, tileSize, tileSize);
                 }
 
                 if (trap.setOff) {
@@ -806,6 +819,7 @@ function Game() {
             if (this.map){
               this.gameCtx.fillStyle="white";
               this.gameCtx.fillRect(this.player.x*4, this.player.y*4 , 4, 4);
+              this.gameCtx.fillRect(this.stairsX*4, this.stairsY*4 , 4, 4);
               for (var y = 0; y < map.length; y++) {
                   for (var x = 0; x < map[y].length; x++) {
                       var tile = map[y][x];
@@ -816,6 +830,11 @@ function Game() {
 
                       }
                   }
+              }
+
+              for (var i = 0; i < this.enemies.length; i++) {
+                this.gameCtx.fillStyle="purple";
+                this.gameCtx.fillRect(this.enemies[i].x*4, this.enemies[i].y*4 , 4, 4);
               }
             }
 
@@ -836,8 +855,10 @@ function Game() {
                 this.gameCtx.beginPath();
                 this.gameCtx.lineWidth="6";
                 this.gameCtx.strokeStyle="white";
+                this.gameCtx.setLineDash([0]);
                 this.gameCtx.rect(inventoryX-3, inventoryY-3, inventoryWidth+6, inventoryHeight+6);
                 this.gameCtx.stroke();
+
 
                 this.gameCtx.fillStyle = "white";
                 this.gameCtx.fillRect(inventoryX, inventoryY + this.inventoryCursor * tileSize, tileSize, tileSize);
